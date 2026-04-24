@@ -38,6 +38,9 @@ importers:
       '@prisma/client':
         specifier: ^7.8.0
         version: 7.8.0(prisma@7.8.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3))(typescript@5.9.3)
+      '@worldcoin/minikit-js':
+        specifier: ^2.0.3
+        version: 2.0.3(react@19.2.5)(typescript@5.9.3)
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -1357,11 +1360,38 @@ packages:
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
 
+  '@worldcoin/minikit-js@2.0.3':
+    resolution: {integrity: sha512-41rhB59/MOWpAihcCidMijYmzlht5BDPTBQwRRDMhX65rC4Ac2+qEkajDgCR1xW/YWZm122Z8muJzr1pODDq1A==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      react: ^17 || ^18 || ^19
+      siwe: ^3.0.0
+      viem: ^2.21.0
+      wagmi: ^3.0.0
+    peerDependenciesMeta:
+      siwe:
+        optional: true
+      viem:
+        optional: true
+      wagmi:
+        optional: true
+
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
 
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
+
+  abitype@1.2.4:
+    resolution: {integrity: sha512-dpKH+N27vRjarMVTFFkeY445VTKftzGWpL0FiT7xmVmzQRKazZexzC5uHG0f6XKsVLAuUlndnbGau6lRejClxg==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3.22.0 || ^4.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -5221,9 +5251,21 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
+  '@worldcoin/minikit-js@2.0.3(react@19.2.5)(typescript@5.9.3)':
+    dependencies:
+      abitype: 1.2.4(typescript@5.9.3)
+      react: 19.2.5
+    transitivePeerDependencies:
+      - typescript
+      - zod
+
   '@xtuc/ieee754@1.2.0': {}
 
   '@xtuc/long@4.2.2': {}
+
+  abitype@1.2.4(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   accepts@2.0.0:
     dependencies:
