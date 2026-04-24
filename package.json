@@ -15,7 +15,8 @@
     "start:prod": "node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "sdk": "npx nestia sdk",
-    "swagger": "npx nestia swagger"
+    "swagger": "npx nestia swagger",
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@nestia/core": "^11.0.2",
