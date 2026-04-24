@@ -10,6 +10,7 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── 유저 ──
 model User {
   id         String   @id @default(uuid()) @db.Uuid
   world_id   String   @unique
@@ -21,10 +22,12 @@ model User {
   goals          UserGoal[]
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
+  payments       Payment[]
 
   @@map("users")
 }
 
+// ── 도메인 (동적 생성) ──
 model Domain {
   id         String   @id @default(uuid()) @db.Uuid
   name       String   @unique
@@ -35,6 +38,7 @@ model Domain {
   @@map("domains")
 }
 
+// ── 유저 목적 ──
 model UserGoal {
   id         String   @id @default(uuid()) @db.Uuid
   user_id    String   @db.Uuid
@@ -44,13 +48,14 @@ model UserGoal {
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
 
-  user    User     @relation(fields: [user_id], references: [id])
-  domain  Domain   @relation(fields: [domain_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+  domain  Domain  @relation(fields: [domain_id], references: [id])
   roadmap Roadmap?
 
   @@map("user_goals")
 }
 
+// ── 로드맵 ──
 model Roadmap {
   id          String   @id @default(uuid()) @db.Uuid
   goal_id     String   @unique @db.Uuid
@@ -64,6 +69,7 @@ model Roadmap {
   @@map("roadmaps")
 }
 
+// ── 체크포인트 ──
 model Checkpoint {
   id          String   @id @default(uuid()) @db.Uuid
   roadmap_id  String   @db.Uuid
@@ -81,6 +87,7 @@ model Checkpoint {
   @@map("checkpoints")
 }
 
+// ── 문제 은행 ──
 model Question {
   id          String   @id @default(uuid()) @db.Uuid
   tag         String
@@ -98,6 +105,7 @@ model Question {
   @@map("questions")
 }
 
+// ── 유저 답안 ──
 model UserAnswer {
   id          String   @id @default(uuid()) @db.Uuid
   user_id     String   @db.Uuid
@@ -112,6 +120,7 @@ model UserAnswer {
   @@map("user_answers")
 }
 
+// ── HLR 복습 추적 (유저 × 문제) ──
 model UserQuestionStats {
   user_id        String   @db.Uuid
   question_id    String   @db.Uuid
@@ -127,12 +136,28 @@ model UserQuestionStats {
   @@map("user_question_stats")
 }
 
+// ── 결제 ──
+model Payment {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  tx_hash      String   @unique
+  amount_wld   Decimal
+  product_type String
+  status       String   @default("pending")
+  created_at   DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("payments")
+}
+
+// ── 임베딩 (도메인/Goal 유사도 검색) ──
 model DomainEmbedding {
-  id         String                     @id @default(uuid()) @db.Uuid
+  id         String                      @id @default(uuid()) @db.Uuid
   domain     String
   goal       String?
   embedding  Unsupported("vector(768)")
-  created_at DateTime                   @default(now())
+  created_at DateTime                    @default(now())
 
   @@map("domain_embeddings")
 }
