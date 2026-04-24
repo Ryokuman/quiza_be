@@ -3,11 +3,7 @@ import { TypedRoute, TypedBody } from '@nestia/core';
 import { AnswersService } from './answers.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ISubmitAnswer, IAnswerResult } from './dto/answer.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('answers')
 export class AnswersController {

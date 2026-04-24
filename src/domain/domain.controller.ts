@@ -2,14 +2,10 @@ import { Controller, Req, UseGuards } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { DomainService } from './domain.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import type { Request } from 'express';
 import type { IDomainItem, IDomainProgress, IDomainRoadmap } from './dto/domain-response.dto.js';
 import type { IDomainSearchBody, IDomainSearchResult } from './dto/domain-search.dto.js';
 import type { ISaveEmbeddingBody, ISaveEmbeddingResult } from './dto/save-embedding.dto.js';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('domains')
 export class DomainController {
@@ -58,6 +54,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Post('search')
+  @UseGuards(JwtAuthGuard)
   async searchDomains(@TypedBody() body: IDomainSearchBody): Promise<IDomainSearchResult> {
     return this.domainService.searchDomains(body.query);
   }
@@ -67,6 +64,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Post('embeddings')
+  @UseGuards(JwtAuthGuard)
   async saveEmbedding(@TypedBody() body: ISaveEmbeddingBody): Promise<ISaveEmbeddingResult> {
     return this.domainService.saveEmbedding(body.domain, body.goal);
   }

@@ -6,6 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
+/**
+ * Requires JwtAuthGuard to run first so that `request.user.userId` is populated.
+ * Always use in combination: `@UseGuards(JwtAuthGuard, PremiumGuard)`.
+ */
 @Injectable()
 export class PremiumGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}

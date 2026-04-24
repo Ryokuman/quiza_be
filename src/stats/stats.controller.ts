@@ -3,11 +3,7 @@ import { TypedRoute } from '@nestia/core';
 import { StatsService } from './stats.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { IStats } from './dto/stats.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('stats')
 export class StatsController {

@@ -3,11 +3,7 @@ import { TypedRoute, TypedBody } from '@nestia/core';
 import { SessionsService } from './sessions.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ICreateSession, ISession } from './dto/session.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('sessions')
 export class SessionsController {

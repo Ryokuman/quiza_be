@@ -4,11 +4,7 @@ import { QuestionsService } from './questions.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { IGenerateQuestions, IGenerateResult } from './dto/question.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('questions')
 export class QuestionsController {

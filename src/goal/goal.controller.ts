@@ -2,12 +2,8 @@ import { Controller, Req, UseGuards } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { GoalService } from './goal.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import type { Request } from 'express';
 import type { ICreateGoalBody, ICreateGoalResult, IGoalItem } from './dto/create-goal.dto.js';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('goals')
 @UseGuards(JwtAuthGuard)

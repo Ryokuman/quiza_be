@@ -2,7 +2,6 @@ import { Controller, Req, UseGuards } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { PaymentService } from './payment.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import type { Request } from 'express';
 import type {
   IGenerateNonceBody,
   IGenerateNonceResult,
@@ -10,10 +9,7 @@ import type {
   IPaymentItem,
   IPremiumStatus,
 } from './dto/payment.dto.js';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard)

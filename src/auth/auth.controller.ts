@@ -12,12 +12,8 @@ import { JwtAuthGuard } from './jwt-auth.guard.js';
 import type { IWalletAuth } from './dto/wallet-auth.dto.js';
 import type { IDevLogin } from './dto/dev-login.dto.js';
 import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto.js';
-import { Request } from 'express';
 import type { Response } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from './types.js';
 
 @Controller('auth')
 export class AuthController {
