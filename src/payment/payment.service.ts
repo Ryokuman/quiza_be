@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PaymentStatus } from '../../generated/prisma/client.js';
 
 @Injectable()
 export class PaymentService {
@@ -31,7 +32,7 @@ export class PaymentService {
         user_id: userId,
         amount_wld: input.amountWld,
         product_type: input.productType,
-        status: 'pending',
+        status: PaymentStatus.pending,
       },
     });
 
@@ -59,7 +60,7 @@ export class PaymentService {
       throw new BadRequestException('유효하지 않은 reference');
     }
 
-    if (payment.status !== 'pending') {
+    if (payment.status !== PaymentStatus.pending) {
       throw new ConflictException('이미 처리된 결제입니다');
     }
 
@@ -86,7 +87,7 @@ export class PaymentService {
     const [confirmed] = await this.prisma.$transaction([
       this.prisma.payment.update({
         where: { id: payment.id },
-        data: { tx_hash: input.transactionId, status: 'confirmed' },
+        data: { tx_hash: input.transactionId, status: PaymentStatus.confirmed },
       }),
       this.prisma.user.update({
         where: { id: userId },

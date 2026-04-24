@@ -1,12 +1,10 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { GoalService } from './goal.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ICreateGoalBody, ICreateGoalResult, IGoalItem } from './dto/create-goal.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('goals')
-@UseGuards(JwtAuthGuard)
 export class GoalController {
   constructor(private readonly goalService: GoalService) {}
 

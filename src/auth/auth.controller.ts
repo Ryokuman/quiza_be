@@ -3,12 +3,11 @@ import {
   ForbiddenException,
   Req,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service.js';
-import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { Public } from './decorators/public.decorator.js';
 import type { IWalletAuth } from './dto/wallet-auth.dto.js';
 import type { IDevLogin } from './dto/dev-login.dto.js';
 import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto.js';
@@ -43,6 +42,7 @@ export class AuthController {
    * @tag Auth
    */
   @TypedRoute.Get('nonce')
+  @Public()
   getNonce(): INonceResponse {
     return { nonce: this.authService.generateNonce() };
   }
@@ -62,6 +62,7 @@ export class AuthController {
    * @tag Auth
    */
   @TypedRoute.Post('wallet')
+  @Public()
   async walletAuth(
     @TypedBody() body: IWalletAuth,
     @Res({ passthrough: true }) res: Response,
@@ -82,6 +83,7 @@ export class AuthController {
    * @tag Auth
    */
   @TypedRoute.Post('dev-login')
+  @Public()
   async devLogin(
     @TypedBody() body: IDevLogin,
     @Res({ passthrough: true }) res: Response,
@@ -117,7 +119,6 @@ export class AuthController {
    * @tag Auth
    */
   @TypedRoute.Get('me')
-  @UseGuards(JwtAuthGuard)
   async me(@Req() req: AuthenticatedRequest) {
     return this.authService.getUserById(req.user.userId);
   }
@@ -132,6 +133,7 @@ export class AuthController {
    * @tag Auth
    */
   @TypedRoute.Post('logout')
+  @Public()
   async logout(@Res({ passthrough: true }) res: Response): Promise<IAuthResponse> {
     res.clearCookie('access_token', { path: '/' });
     return { success: true };

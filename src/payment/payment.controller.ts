@@ -1,7 +1,6 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { PaymentService } from './payment.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type {
   IGenerateNonceBody,
   IGenerateNonceResult,
@@ -12,7 +11,6 @@ import type {
 import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('payments')
-@UseGuards(JwtAuthGuard)
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 

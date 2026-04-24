@@ -1,7 +1,6 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { AnswersService } from './answers.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ISubmitAnswer, IAnswerResult } from './dto/answer.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
 
@@ -24,7 +23,6 @@ export class AnswersController {
    * @tag Answers
    */
   @TypedRoute.Post()
-  @UseGuards(JwtAuthGuard)
   async submit(
     @Req() req: AuthenticatedRequest,
     @TypedBody() body: ISubmitAnswer,

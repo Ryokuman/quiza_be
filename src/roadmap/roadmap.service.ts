@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 interface SimilarityRow {
@@ -9,9 +9,24 @@ interface SimilarityRow {
 
 @Injectable()
 export class RoadmapService {
+  private readonly logger = new Logger(RoadmapService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findSimilarTemplate(embedding: number[], threshold = 0.85) {
+    if (
+      !Array.isArray(embedding) ||
+      embedding.length === 0 ||
+      !embedding.every((v) => typeof v === 'number' && Number.isFinite(v))
+    ) {
+      this.logger.warn(
+        `Invalid embedding input: type=${typeof embedding}, ` +
+          `isArray=${Array.isArray(embedding)}, ` +
+          `length=${Array.isArray(embedding) ? embedding.length : 'N/A'}`,
+      );
+      return null;
+    }
+
     const vectorStr = `[${embedding.join(',')}]`;
 
     const rows = await this.prisma.$queryRaw<SimilarityRow[]>`

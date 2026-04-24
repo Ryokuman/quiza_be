@@ -1,7 +1,6 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { SessionsService } from './sessions.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ICreateSession, ISession } from './dto/session.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
 
@@ -23,7 +22,6 @@ export class SessionsController {
    * @tag Sessions
    */
   @TypedRoute.Post()
-  @UseGuards(JwtAuthGuard)
   async create(
     @Req() req: AuthenticatedRequest,
     @TypedBody() body: ICreateSession,

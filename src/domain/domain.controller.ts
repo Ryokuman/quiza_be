@@ -1,7 +1,6 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { DomainService } from './domain.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { IDomainItem, IDomainProgress, IDomainRoadmap } from './dto/domain-response.dto.js';
 import type { IDomainSearchBody, IDomainSearchResult } from './dto/domain-search.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
@@ -29,7 +28,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Get('me')
-  @UseGuards(JwtAuthGuard)
+
   async getUserDomains(@Req() req: AuthenticatedRequest): Promise<IDomainProgress[]> {
     return this.domainService.getUserDomains(req.user.userId);
   }
@@ -39,7 +38,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Get(':domainId/roadmap')
-  @UseGuards(JwtAuthGuard)
+
   async getDomainRoadmap(
     @TypedParam('domainId') domainId: string,
     @Req() req: AuthenticatedRequest,
@@ -52,7 +51,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Get(':domainId/tags')
-  @UseGuards(JwtAuthGuard)
+
   async getTagsByDomain(
     @TypedParam('domainId') domainId: string,
   ) {
@@ -65,7 +64,7 @@ export class DomainController {
    * @tag Domain
    */
   @TypedRoute.Post('search')
-  @UseGuards(JwtAuthGuard)
+
   async searchDomains(@TypedBody() body: IDomainSearchBody): Promise<IDomainSearchResult> {
     return this.domainService.searchDomains(body.query);
   }

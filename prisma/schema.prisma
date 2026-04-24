@@ -158,6 +158,13 @@ model UserQuestionStats {
   @@map("user_question_stats")
 }
 
+// ── 결제 상태 ──
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+}
+
 // ── 결제 ──
 model Payment {
   id           String   @id @default(uuid()) @db.Uuid
@@ -165,7 +172,7 @@ model Payment {
   tx_hash      String?  @unique
   amount_wld   Decimal
   product_type String
-  status       String   @default("pending")
+  status       PaymentStatus @default(pending)
   created_at   DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id])

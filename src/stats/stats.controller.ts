@@ -1,7 +1,6 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute } from '@nestia/core';
 import { StatsService } from './stats.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { IStats } from './dto/stats.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
 
@@ -18,7 +17,6 @@ export class StatsController {
    * @tag Stats
    */
   @TypedRoute.Get()
-  @UseGuards(JwtAuthGuard)
   async getStats(@Req() req: AuthenticatedRequest): Promise<IStats> {
     return this.statsService.getStats(req.user.userId);
   }

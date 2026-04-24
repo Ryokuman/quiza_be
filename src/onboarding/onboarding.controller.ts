@@ -1,11 +1,9 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { OnboardingService } from './onboarding.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { IOnboardingChatBody, IOnboardingChatResult } from './dto/onboarding.dto.js';
 
 @Controller('onboarding')
-@UseGuards(JwtAuthGuard)
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 
