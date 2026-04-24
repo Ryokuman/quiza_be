@@ -3,8 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 interface SimilarityRow {
   id: string;
-  domain: string;
-  goal: string | null;
+  domain_id: string;
   similarity: number;
 }
 
@@ -16,7 +15,7 @@ export class RoadmapService {
     const vectorStr = `[${embedding.join(',')}]`;
 
     const rows = await this.prisma.$queryRaw<SimilarityRow[]>`
-      SELECT de.id, de.domain, de.goal,
+      SELECT de.id, de.domain_id,
              1 - (de.embedding <=> ${vectorStr}::vector) as similarity
       FROM domain_embeddings de
       WHERE 1 - (de.embedding <=> ${vectorStr}::vector) > ${threshold}
@@ -28,13 +27,12 @@ export class RoadmapService {
 
     const match = rows[0]!;
 
-    // Find a template roadmap that matches this domain+goal
+    // Find a template roadmap that matches this domain
     const templateRoadmap = await this.prisma.roadmap.findFirst({
       where: {
         is_template: true,
         goal: {
-          domain: { name: match.domain },
-          ...(match.goal ? { target: match.goal } : {}),
+          domain_id: match.domain_id,
         },
       },
       include: { checkpoints: { orderBy: { order: 'asc' } } },
@@ -63,7 +61,7 @@ export class RoadmapService {
           create: template.checkpoints.map((cp) => ({
             title: cp.title,
             description: cp.description,
-            tag: cp.tag,
+            tag_id: cp.tag_id,
             difficulty: cp.difficulty,
             order: cp.order,
             status: 'not_started',

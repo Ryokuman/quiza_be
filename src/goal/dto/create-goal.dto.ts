@@ -2,7 +2,7 @@ export interface ICreateGoalBody {
   domain: string;
   target: string;
   level: string;
-  embedding?: number[];
+  tagIds?: string[];
 }
 
 export interface IGoalItem {

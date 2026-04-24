@@ -21,7 +21,8 @@ export interface ICheckpointItem {
   id: string;
   title: string;
   description: string | null;
-  tag: string;
+  tag_id: string;
+  tag_name?: string;
   difficulty: number;
   order: number;
   status: string;

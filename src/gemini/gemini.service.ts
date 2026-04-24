@@ -45,6 +45,37 @@ export class GeminiService {
   }
 
   /**
+   * 도메인에 적합한 학습 태그를 추천한다.
+   * 예: domain="토익", target="800점" → ["listening", "reading", "grammar", "vocabulary", "part5_문법"]
+   */
+  async suggestDomainTags(domain: string, target?: string): Promise<string[]> {
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const context = target ? `도메인: "${domain}", 학습 목표: "${target}"` : `도메인: "${domain}"`;
+
+    const result = await model.generateContent(
+      `${context}에 적합한 세부 학습 주제 태그를 추천해주세요.
+
+규칙:
+- 5~8개 태그
+- 한국어 또는 해당 분야에서 통용되는 용어
+- 구체적인 하위 주제 (너무 넓지 않게)
+- JSON 배열 형식으로만 응답 (다른 텍스트 없이)`,
+    );
+
+    const text = result.response.text().trim();
+    const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+
+    try {
+      const tags = JSON.parse(cleaned);
+      if (Array.isArray(tags)) return tags;
+    } catch {
+      // fallback
+    }
+    return [];
+  }
+
+  /**
    * 텍스트를 768차원 임베딩 벡터로 변환한다.
    * Gemini text-embedding-004 모델 사용.
    */

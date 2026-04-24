@@ -1,24 +1,22 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RoadmapService } from '../roadmap/roadmap.service.js';
+import { DomainService } from '../domain/domain.service.js';
 
 @Injectable()
 export class GoalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly roadmapService: RoadmapService,
+    private readonly domainService: DomainService,
   ) {}
 
   async createGoal(
     userId: string,
-    input: { domain: string; target: string; level: string; embedding?: number[] },
+    input: { domain: string; target: string; level: string; tagIds?: string[] },
   ) {
-    // Find or create domain
-    const domain = await this.prisma.domain.upsert({
-      where: { name: input.domain },
-      update: {},
-      create: { name: input.domain },
-    });
+    // Use DomainService to find or create domain (auto-generates embedding)
+    const domain = await this.domainService.findOrCreate(input.domain);
 
     // Check duplicate active goal
     const existing = await this.prisma.userGoal.findFirst({
@@ -39,17 +37,7 @@ export class GoalService {
       include: { domain: true },
     });
 
-    // Try template matching if embedding provided
-    let templateMatched = false;
-    if (input.embedding?.length) {
-      const match = await this.roadmapService.findSimilarTemplate(input.embedding);
-      if (match) {
-        await this.roadmapService.copyTemplate(match.roadmapId, goal.id);
-        templateMatched = true;
-      }
-    }
-
-    const roadmap = await this.roadmapService.getByGoalId(goal.id);
+    // Template matching removed — roadmap will be generated from selected tags
 
     return {
       goal: {
@@ -59,9 +47,9 @@ export class GoalService {
         level: goal.level,
         is_active: goal.is_active,
         created_at: goal.created_at.toISOString(),
-        hasRoadmap: !!roadmap,
+        hasRoadmap: false,
       },
-      templateMatched,
+      templateMatched: false,
     };
   }
 

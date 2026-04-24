@@ -4,7 +4,6 @@ import { DomainService } from './domain.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { IDomainItem, IDomainProgress, IDomainRoadmap } from './dto/domain-response.dto.js';
 import type { IDomainSearchBody, IDomainSearchResult } from './dto/domain-search.dto.js';
-import type { ISaveEmbeddingBody, ISaveEmbeddingResult } from './dto/save-embedding.dto.js';
 import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('domains')
@@ -49,6 +48,18 @@ export class DomainController {
   }
 
   /**
+   * 특정 도메인의 태그 목록 조회.
+   * @tag Domain
+   */
+  @TypedRoute.Get(':domainId/tags')
+  @UseGuards(JwtAuthGuard)
+  async getTagsByDomain(
+    @TypedParam('domainId') domainId: string,
+  ) {
+    return this.domainService.getTagsByDomainId(domainId);
+  }
+
+  /**
    * 유저 자연어 입력으로 도메인 검색.
    * Gemini로 태그 추출 + 임베딩 유사도 검색.
    * @tag Domain
@@ -57,15 +68,5 @@ export class DomainController {
   @UseGuards(JwtAuthGuard)
   async searchDomains(@TypedBody() body: IDomainSearchBody): Promise<IDomainSearchResult> {
     return this.domainService.searchDomains(body.query);
-  }
-
-  /**
-   * 도메인/Goal 텍스트의 임베딩을 생성하여 저장.
-   * @tag Domain
-   */
-  @TypedRoute.Post('embeddings')
-  @UseGuards(JwtAuthGuard)
-  async saveEmbedding(@TypedBody() body: ISaveEmbeddingBody): Promise<ISaveEmbeddingResult> {
-    return this.domainService.saveEmbedding(body.domain, body.goal);
   }
 }

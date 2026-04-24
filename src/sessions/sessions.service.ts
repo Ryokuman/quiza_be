@@ -8,7 +8,7 @@ export class SessionsService {
   /**
    * 체크포인트 기반으로 세션을 구성한다.
    *
-   * 1. Checkpoint의 tag + difficulty로 문제 은행에서 후보 조회
+   * 1. Checkpoint의 tag_id + difficulty로 문제 은행에서 후보 조회
    * 2. UserQuestionStats에서 p(recall) < 0.5인 복습 문제 추출
    * 3. 복습 ~40% + 새 문제 ~60% 비율로 ~15문제 구성
    *
@@ -22,14 +22,14 @@ export class SessionsService {
       throw new NotFoundException('Checkpoint not found');
     }
 
-    const { tag, difficulty } = checkpoint;
+    const { tag_id, difficulty } = checkpoint;
     const TARGET_COUNT = 15;
     const REVIEW_RATIO = 0.4;
 
     // 복습 대상 조회: p(recall) < 0.5인 문제
     const reviewQuestions = await this.getReviewQuestions(
       userId,
-      tag,
+      tag_id,
       difficulty,
     );
 
@@ -48,7 +48,7 @@ export class SessionsService {
     // 새 문제 조회 (복습 대상 제외, difficulty ±1 범위)
     const newQuestions = await this.prisma.question.findMany({
       where: {
-        tag,
+        tag_id,
         difficulty: {
           gte: Math.max(1, difficulty - 1),
           lte: Math.min(5, difficulty + 1),
@@ -58,7 +58,8 @@ export class SessionsService {
       take: newCount,
       select: {
         id: true,
-        tag: true,
+        tag_id: true,
+        tag: { select: { id: true, name: true } },
         type: true,
         difficulty: true,
         content: true,
@@ -74,7 +75,8 @@ export class SessionsService {
             where: { id: { in: reviewIds } },
             select: {
               id: true,
-              tag: true,
+              tag_id: true,
+              tag: { select: { id: true, name: true } },
               type: true,
               difficulty: true,
               content: true,
@@ -100,14 +102,14 @@ export class SessionsService {
    */
   private async getReviewQuestions(
     userId: string,
-    tag: string,
+    tagId: string,
     difficulty: number,
   ) {
     const stats = await this.prisma.userQuestionStats.findMany({
       where: {
         user_id: userId,
         question: {
-          tag,
+          tag_id: tagId,
           difficulty: {
             gte: Math.max(1, difficulty - 1),
             lte: Math.min(5, difficulty + 1),

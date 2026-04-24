@@ -27,15 +27,35 @@ model User {
   @@map("users")
 }
 
-// ── 도메인 (동적 생성) ──
+// ── 도메인 (구체적 주제: "토익", "제빵" 등) ──
 model Domain {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       String   @unique
-  created_at DateTime @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now())
 
-  goals UserGoal[]
+  goals     UserGoal[]
+  tags      Tag[]
+  embedding DomainEmbedding?
 
   @@map("domains")
+}
+
+// ── 태그 (도메인 종속: "토익" → "listening", "grammar" 등) ──
+model Tag {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  domain_id  String   @db.Uuid
+  created_by String   @default("seed")
+  created_at DateTime @default(now())
+
+  domain      Domain         @relation(fields: [domain_id], references: [id])
+  questions   Question[]
+  checkpoints Checkpoint[]
+  embedding   TagEmbedding?
+
+  @@unique([domain_id, name])
+  @@map("tags")
 }
 
 // ── 유저 목적 ──
@@ -75,7 +95,7 @@ model Checkpoint {
   roadmap_id  String   @db.Uuid
   title       String
   description String?
-  tag         String
+  tag_id      String   @db.Uuid
   difficulty  Int
   order       Int
   status      String   @default("not_started")
@@ -83,6 +103,7 @@ model Checkpoint {
   attempts    Int      @default(0)
 
   roadmap Roadmap @relation(fields: [roadmap_id], references: [id])
+  tag     Tag     @relation(fields: [tag_id], references: [id])
 
   @@map("checkpoints")
 }
@@ -90,7 +111,7 @@ model Checkpoint {
 // ── 문제 은행 ──
 model Question {
   id          String   @id @default(uuid()) @db.Uuid
-  tag         String
+  tag_id      String   @db.Uuid
   type        String
   difficulty  Int
   content     String
@@ -99,6 +120,7 @@ model Question {
   explanation String?
   created_at  DateTime @default(now())
 
+  tag            Tag                @relation(fields: [tag_id], references: [id])
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
 
@@ -151,13 +173,26 @@ model Payment {
   @@map("payments")
 }
 
-// ── 임베딩 (도메인/Goal 유사도 검색) ──
+// ── 도메인 임베딩 (도메인 유사도 검색) ──
 model DomainEmbedding {
   id         String                      @id @default(uuid()) @db.Uuid
-  domain     String
-  goal       String?
+  domain_id  String                      @unique @db.Uuid
   embedding  Unsupported("vector(768)")
   created_at DateTime                    @default(now())
 
+  domain Domain @relation(fields: [domain_id], references: [id])
+
   @@map("domain_embeddings")
+}
+
+// ── 태그 임베딩 (도메인 내 태그 유사도 검색) ──
+model TagEmbedding {
+  id         String                      @id @default(uuid()) @db.Uuid
+  tag_id     String                      @unique @db.Uuid
+  embedding  Unsupported("vector(768)")
+  created_at DateTime                    @default(now())
+
+  tag Tag @relation(fields: [tag_id], references: [id])
+
+  @@map("tag_embeddings")
 }
