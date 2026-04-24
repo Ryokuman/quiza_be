@@ -3,7 +3,13 @@ import { TypedRoute, TypedBody } from '@nestia/core';
 import { PaymentService } from './payment.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { Request } from 'express';
-import type { IVerifyPaymentBody, IPaymentItem, IPremiumStatus } from './dto/payment.dto.js';
+import type {
+  IGenerateNonceBody,
+  IGenerateNonceResult,
+  IConfirmPaymentBody,
+  IPaymentItem,
+  IPremiumStatus,
+} from './dto/payment.dto.js';
 
 interface AuthenticatedRequest extends Request {
   user: { userId: string; worldId: string };
@@ -15,18 +21,32 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   /**
-   * 결제 트랜잭션 검증 + 프리미엄 활성화.
+   * 결제 nonce 생성 — MiniKit.pay() 호출 전에 reference 발급.
    * @tag Payment
    */
-  @TypedRoute.Post('verify')
-  async verifyPayment(
-    @TypedBody() body: IVerifyPaymentBody,
+  @TypedRoute.Post('nonce')
+  async generateNonce(
+    @TypedBody() body: IGenerateNonceBody,
     @Req() req: AuthenticatedRequest,
-  ): Promise<IPaymentItem> {
-    const payment = await this.paymentService.verifyPayment(req.user.userId, {
-      txHash: body.txHash,
+  ): Promise<IGenerateNonceResult> {
+    return this.paymentService.generateNonce(req.user.userId, {
       amountWld: body.amountWld,
       productType: body.productType,
+    });
+  }
+
+  /**
+   * 결제 검증 — MiniKit.pay() 응답 후 Developer Portal API로 검증.
+   * @tag Payment
+   */
+  @TypedRoute.Post('confirm')
+  async confirmPayment(
+    @TypedBody() body: IConfirmPaymentBody,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<IPaymentItem> {
+    const payment = await this.paymentService.confirmPayment(req.user.userId, {
+      transactionId: body.transactionId,
+      reference: body.reference,
     });
     return {
       id: payment.id,

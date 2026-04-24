@@ -140,7 +140,7 @@ model UserQuestionStats {
 model Payment {
   id           String   @id @default(uuid()) @db.Uuid
   user_id      String   @db.Uuid
-  tx_hash      String   @unique
+  tx_hash      String?  @unique
   amount_wld   Decimal
   product_type String
   status       String   @default("pending")
