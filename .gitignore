@@ -1,0 +1,12 @@
+node_modules/
+
+# env
+.env
+.env.*
+!.env.example
+
+# build
+/dist/
+
+# prisma generated client
+/generated/prisma/
