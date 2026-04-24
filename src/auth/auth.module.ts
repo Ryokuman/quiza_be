@@ -1,16 +1,10 @@
-import { Module, Type } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
-import { DevAuthController } from './dev-auth.controller.js';
 import { JwtStrategy } from './jwt.strategy.js';
-
-const controllers: Type[] = [AuthController];
-if (process.env.NODE_ENV !== 'production') {
-  controllers.push(DevAuthController);
-}
 
 @Module({
   imports: [
@@ -25,7 +19,7 @@ if (process.env.NODE_ENV !== 'production') {
     }),
   ],
   providers: [AuthService, JwtStrategy],
-  controllers,
+  controllers: [AuthController],
   exports: [AuthService],
 })
 export class AuthModule {}
