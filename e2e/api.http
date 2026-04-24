@@ -1,0 +1,145 @@
+### ============================================================
+### Quiza V2 — E2E API Test (VS Code REST Client)
+### 순서대로 실행하면 전체 플로우를 테스트할 수 있습니다.
+###
+### 사전 준비:
+###   1. VS Code 확장 "REST Client" 설치 (humao.rest-client)
+###   2. npm run start:dev  (서버 실행 — localhost:8080)
+###   3. 각 섹션의 "Send Request" 클릭
+###
+### 응답에서 받은 ID를 다음 요청의 변수에 복사해서 사용하세요.
+### ============================================================
+
+@baseUrl = http://localhost:8080
+
+### ----- 0. Health Check -----
+
+GET {{baseUrl}}/health HTTP/1.1
+
+### ----- 1. Auth: Dev Login (쿠키 발급) -----
+
+# @name devLogin
+POST {{baseUrl}}/auth/dev-login HTTP/1.1
+Content-Type: application/json
+
+{
+  "world_id": "test-user-001"
+}
+
+### ----- 2. Auth: Get Nonce -----
+
+GET {{baseUrl}}/auth/nonce HTTP/1.1
+
+### ----- 3. Auth: Me (로그인 확인) -----
+### devLogin 응답의 Set-Cookie에서 access_token 값을 복사하세요.
+
+@token = {{devLogin.response.headers.Set-Cookie}}
+
+# @name me
+GET {{baseUrl}}/auth/me HTTP/1.1
+Cookie: {{token}}
+
+### ----- 4. Domains: 목록 조회 -----
+
+# @name domains
+GET {{baseUrl}}/domains HTTP/1.1
+Cookie: {{token}}
+
+### ----- 5. Goals: 학습 목표 생성 -----
+### domains 응답에서 id를 복사하여 domain_id에 넣으세요.
+
+@domainId = PASTE_DOMAIN_ID_HERE
+
+# @name createGoal
+POST {{baseUrl}}/goals HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "domain_id": "{{domainId}}",
+  "target": "TOEIC 800",
+  "level": "intermediate"
+}
+
+### ----- 6. Roadmaps: 로드맵 생성 -----
+### createGoal 응답에서 id를 복사하여 goalId에 넣으세요.
+
+@goalId = PASTE_GOAL_ID_HERE
+
+# @name createRoadmap
+POST {{baseUrl}}/roadmaps HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "goal_id": "{{goalId}}"
+}
+
+### ----- 7. Roadmaps: 로드맵 조회 -----
+### createRoadmap 응답에서 id를 복사하여 roadmapId에 넣으세요.
+
+@roadmapId = PASTE_ROADMAP_ID_HERE
+
+GET {{baseUrl}}/roadmaps/{{roadmapId}} HTTP/1.1
+Cookie: {{token}}
+
+### ----- 8. Roadmaps: 진행률 조회 -----
+
+GET {{baseUrl}}/roadmaps/{{roadmapId}}/progress HTTP/1.1
+Cookie: {{token}}
+
+### ----- 9. Sessions: 학습 세션 생성 -----
+### 로드맵 조회 응답의 checkpoints[0].id를 복사하여 checkpointId에 넣으세요.
+
+@checkpointId = PASTE_CHECKPOINT_ID_HERE
+
+# @name createSession
+POST {{baseUrl}}/sessions HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "checkpoint_id": "{{checkpointId}}"
+}
+
+### ----- 10. Answers: 답안 제출 -----
+### createSession 응답의 questions[0].id를 복사하여 questionId에 넣으세요.
+
+@questionId = PASTE_QUESTION_ID_HERE
+
+# @name submitAnswer
+POST {{baseUrl}}/answers HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "question_id": "{{questionId}}",
+  "user_answer": "A"
+}
+
+### ----- 11. Stats: 학습 통계 조회 -----
+
+GET {{baseUrl}}/stats HTTP/1.1
+Cookie: {{token}}
+
+### ----- 12. Questions: AI 문제 생성 (프리미엄 전용) -----
+### is_premium=false 유저는 403 응답을 받습니다.
+
+POST {{baseUrl}}/questions/generate HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "tag": "grammar",
+  "difficulty": 3,
+  "count": 5
+}
+
+### ----- 13. Auth: Logout -----
+
+POST {{baseUrl}}/auth/logout HTTP/1.1
+Cookie: {{token}}
+
+### ----- 14. Auth: Me (로그아웃 확인 — 401 예상) -----
+
+GET {{baseUrl}}/auth/me HTTP/1.1

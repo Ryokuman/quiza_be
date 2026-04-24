@@ -11,7 +11,7 @@ const config: INestiaConfig = {
     output: 'dist/swagger.json',
     beautify: true,
     servers: [
-      { url: 'http://localhost:3000', description: 'Local' },
+      { url: 'http://localhost:8080', description: 'Local' },
     ],
   },
 };

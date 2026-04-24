@@ -1,0 +1,494 @@
+{
+	"info": {
+		"name": "Quiza V2 API",
+		"description": "Quiza V2 E2E API Test Collection.\n\n실행 순서:\n1. Health Check\n2. Dev Login → 쿠키 자동 저장\n3. Auth Me → 로그인 확인\n4. Domains → domain_id 확보\n5. Goals → goal_id 확보\n6. Roadmaps Create → roadmap_id 확보\n7. Roadmap Get → checkpoint_id 확보\n8. Roadmap Progress\n9. Sessions → question_id 확보\n10. Answers\n11. Stats\n12. Questions Generate (403 예상)\n13. Logout\n14. Auth Me (401 예상)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "domainId",
+			"value": ""
+		},
+		{
+			"key": "goalId",
+			"value": ""
+		},
+		{
+			"key": "roadmapId",
+			"value": ""
+		},
+		{
+			"key": "checkpointId",
+			"value": ""
+		},
+		{
+			"key": "questionId",
+			"value": ""
+		}
+	],
+	"item": [
+		{
+			"name": "0. Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": ["{{baseUrl}}"],
+					"path": ["health"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Health check returns ok', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.status).to.eql('ok');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Auth: Dev Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"world_id\": \"test-user-001\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/dev-login",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "dev-login"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Dev login success', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.success).to.eql(true);",
+							"});",
+							"",
+							"// 쿠키는 Postman이 자동으로 저장합니다"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Auth: Get Nonce",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/auth/nonce",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "nonce"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Nonce returned', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.nonce).to.be.a('string');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Auth: Me",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/auth/me",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "me"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Authenticated user returned', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.id).to.be.a('string');",
+							"    pm.expect(json.world_id).to.eql('test-user-001');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Domains: List",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/domains",
+					"host": ["{{baseUrl}}"],
+					"path": ["domains"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Domains returned', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json).to.be.an('array').that.is.not.empty;",
+							"    pm.collectionVariables.set('domainId', json[0].id);",
+							"    console.log('domainId:', json[0].id);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Goals: Create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"domain_id\": \"{{domainId}}\",\n  \"target\": \"TOEIC 800\",\n  \"level\": \"intermediate\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/goals",
+					"host": ["{{baseUrl}}"],
+					"path": ["goals"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Goal created', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.id).to.be.a('string');",
+							"    pm.expect(json.target).to.eql('TOEIC 800');",
+							"    pm.collectionVariables.set('goalId', json.id);",
+							"    console.log('goalId:', json.id);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Roadmaps: Create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"goal_id\": \"{{goalId}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/roadmaps",
+					"host": ["{{baseUrl}}"],
+					"path": ["roadmaps"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Roadmap created', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.id).to.be.a('string');",
+							"    pm.expect(json.checkpoints).to.be.an('array');",
+							"    pm.collectionVariables.set('roadmapId', json.id);",
+							"    if (json.checkpoints.length > 0) {",
+							"        pm.collectionVariables.set('checkpointId', json.checkpoints[0].id);",
+							"        console.log('checkpointId:', json.checkpoints[0].id);",
+							"    }",
+							"    console.log('roadmapId:', json.id);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Roadmaps: Get by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/roadmaps/{{roadmapId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["roadmaps", "{{roadmapId}}"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Roadmap returned with checkpoints', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.id).to.be.a('string');",
+							"    pm.expect(json.checkpoints).to.be.an('array');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Roadmaps: Progress",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/roadmaps/{{roadmapId}}/progress",
+					"host": ["{{baseUrl}}"],
+					"path": ["roadmaps", "{{roadmapId}}", "progress"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Progress returned', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json).to.have.property('passed');",
+							"    pm.expect(json).to.have.property('total');",
+							"    pm.expect(json).to.have.property('percentage');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Sessions: Create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"checkpoint_id\": \"{{checkpointId}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/sessions",
+					"host": ["{{baseUrl}}"],
+					"path": ["sessions"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Session created with questions', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.questions).to.be.an('array').that.is.not.empty;",
+							"    pm.collectionVariables.set('questionId', json.questions[0].id);",
+							"    console.log('questionId:', json.questions[0].id);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Answers: Submit",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"question_id\": \"{{questionId}}\",\n  \"user_answer\": \"A\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/answers",
+					"host": ["{{baseUrl}}"],
+					"path": ["answers"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Answer graded', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json).to.have.property('is_correct');",
+							"    pm.expect(json).to.have.property('correct_answer');",
+							"    pm.expect(json).to.have.property('explanation');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Stats: Get",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/stats",
+					"host": ["{{baseUrl}}"],
+					"path": ["stats"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Stats returned', function () {",
+							"    pm.response.to.have.status(200);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json).to.be.an('object');",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "12. Questions: Generate (403 expected)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"tag\": \"grammar\",\n  \"difficulty\": 3,\n  \"count\": 5\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/questions/generate",
+					"host": ["{{baseUrl}}"],
+					"path": ["questions", "generate"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Non-premium user gets 403', function () {",
+							"    pm.response.to.have.status(403);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "13. Auth: Logout",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/auth/logout",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "logout"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Logout success', function () {",
+							"    pm.response.to.have.status(201);",
+							"    var json = pm.response.json();",
+							"    pm.expect(json.success).to.eql(true);",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "14. Auth: Me after Logout (401 expected)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/auth/me",
+					"host": ["{{baseUrl}}"],
+					"path": ["auth", "me"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Unauthorized after logout', function () {",
+							"    pm.response.to.have.status(401);",
+							"});"
+						]
+					}
+				}
+			]
+		}
+	]
+}

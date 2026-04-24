@@ -14,8 +14,125 @@ model User {
   id         String   @id @default(uuid()) @db.Uuid
   world_id   String   @unique
   nickname   String
+  is_premium Boolean  @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  goals          UserGoal[]
+  answers        UserAnswer[]
+  question_stats UserQuestionStats[]
+
   @@map("users")
+}
+
+model Domain {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String   @unique
+  created_at DateTime @default(now())
+
+  goals UserGoal[]
+
+  @@map("domains")
+}
+
+model UserGoal {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  domain_id  String   @db.Uuid
+  target     String
+  level      String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  user    User     @relation(fields: [user_id], references: [id])
+  domain  Domain   @relation(fields: [domain_id], references: [id])
+  roadmap Roadmap?
+
+  @@map("user_goals")
+}
+
+model Roadmap {
+  id          String   @id @default(uuid()) @db.Uuid
+  goal_id     String   @unique @db.Uuid
+  title       String
+  is_template Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  goal        UserGoal     @relation(fields: [goal_id], references: [id])
+  checkpoints Checkpoint[]
+
+  @@map("roadmaps")
+}
+
+model Checkpoint {
+  id          String   @id @default(uuid()) @db.Uuid
+  roadmap_id  String   @db.Uuid
+  title       String
+  description String?
+  tag         String
+  difficulty  Int
+  order       Int
+  status      String   @default("not_started")
+  best_score  Float?
+  attempts    Int      @default(0)
+
+  roadmap Roadmap @relation(fields: [roadmap_id], references: [id])
+
+  @@map("checkpoints")
+}
+
+model Question {
+  id          String   @id @default(uuid()) @db.Uuid
+  tag         String
+  type        String
+  difficulty  Int
+  content     String
+  options     String[]
+  answer      String
+  explanation String?
+  created_at  DateTime @default(now())
+
+  answers        UserAnswer[]
+  question_stats UserQuestionStats[]
+
+  @@map("questions")
+}
+
+model UserAnswer {
+  id          String   @id @default(uuid()) @db.Uuid
+  user_id     String   @db.Uuid
+  question_id String   @db.Uuid
+  user_answer String
+  is_correct  Boolean
+  answered_at DateTime @default(now())
+
+  user     User     @relation(fields: [user_id], references: [id])
+  question Question @relation(fields: [question_id], references: [id])
+
+  @@map("user_answers")
+}
+
+model UserQuestionStats {
+  user_id        String   @db.Uuid
+  question_id    String   @db.Uuid
+  total_attempts Int      @default(0)
+  correct_count  Int      @default(0)
+  last_seen_at   DateTime
+  half_life      Float    @default(86400)
+
+  user     User     @relation(fields: [user_id], references: [id])
+  question Question @relation(fields: [question_id], references: [id])
+
+  @@id([user_id, question_id])
+  @@map("user_question_stats")
+}
+
+model DomainEmbedding {
+  id         String                     @id @default(uuid()) @db.Uuid
+  domain     String
+  goal       String?
+  embedding  Unsupported("vector(768)")
+  created_at DateTime                   @default(now())
+
+  @@map("domain_embeddings")
 }

@@ -108,7 +108,13 @@ export class AuthService {
 
   /** 유저 ID로 유저 정보를 조회한다. GET /auth/me에서 사용. */
   async getUserById(userId: string) {
-    return this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return null;
+    return {
+      ...user,
+      created_at: user.created_at.toISOString(),
+      updated_at: user.updated_at.toISOString(),
+    };
   }
 
   // ─────────────────────────────────────────────────────────
