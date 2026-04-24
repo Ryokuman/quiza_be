@@ -42,11 +42,11 @@ export class RoadmapsService {
     // 같은 domain + target의 템플릿 검색
     const template = await this.findTemplate(goal.domain_id, goal.target);
 
-    if (template) {
-      return this.copyTemplate(goalId, goal.target, template);
-    }
+    const roadmap = template
+      ? await this.copyTemplate(goalId, goal.target, template)
+      : await this.createNew(goalId, goal.target, goal.domain.name);
 
-    return this.createNew(goalId, goal.target, goal.domain.name);
+    return this.toDto(roadmap);
   }
 
   /** 로드맵을 체크포인트 포함하여 조회한다. */
@@ -60,7 +60,7 @@ export class RoadmapsService {
     if (!roadmap) {
       throw new NotFoundException('Roadmap not found');
     }
-    return roadmap;
+    return this.toDto(roadmap);
   }
 
   /** 같은 domain + target의 is_template=true 로드맵을 찾는다. */
@@ -186,6 +186,14 @@ export class RoadmapsService {
       passed,
       total,
       percentage: total === 0 ? 0 : Math.round((passed / total) * 100),
+    };
+  }
+
+  /** Prisma 결과를 DTO로 변환한다 (Date → ISO string). */
+  private toDto(roadmap: { created_at: Date; checkpoints: any[]; [k: string]: any }) {
+    return {
+      ...roadmap,
+      created_at: roadmap.created_at.toISOString(),
     };
   }
 

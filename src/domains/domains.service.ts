@@ -7,8 +7,12 @@ export class DomainsService {
 
   /** 전체 도메인 목록을 반환한다. */
   async findAll() {
-    return this.prisma.domain.findMany({
+    const domains = await this.prisma.domain.findMany({
       orderBy: { created_at: 'asc' },
     });
+    return domains.map((d) => ({
+      ...d,
+      created_at: d.created_at.toISOString(),
+    }));
   }
 }

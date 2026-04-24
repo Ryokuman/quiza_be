@@ -15,7 +15,7 @@ export class GoalsService {
       throw new NotFoundException('Domain not found');
     }
 
-    return this.prisma.userGoal.create({
+    const goal = await this.prisma.userGoal.create({
       data: {
         user_id: userId,
         domain_id: input.domain_id,
@@ -23,5 +23,9 @@ export class GoalsService {
         level: input.level,
       },
     });
+    return {
+      ...goal,
+      created_at: goal.created_at.toISOString(),
+    };
   }
 }
