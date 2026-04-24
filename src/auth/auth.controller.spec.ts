@@ -1,14 +1,11 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 
-// PrismaService → generated/prisma/client의 import.meta.url 문제 우회
-jest.mock('../prisma/prisma.service', () => ({
-  PrismaService: jest.fn(),
-}));
-jest.mock('@worldcoin/minikit-js/siwe', () => ({
-  verifySiweMessage: jest.fn(),
+vi.mock('@worldcoin/minikit-js/siwe', () => ({
+  verifySiweMessage: vi.fn(),
 }));
 
 import { AuthController } from './auth.controller.js';
@@ -17,27 +14,27 @@ import { AuthService } from './auth.service.js';
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: {
-    generateNonce: jest.Mock;
-    verifySiweAuth: jest.Mock;
-    devLogin: jest.Mock;
-    getUserById: jest.Mock;
+    generateNonce: ReturnType<typeof vi.fn>;
+    verifySiweAuth: ReturnType<typeof vi.fn>;
+    devLogin: ReturnType<typeof vi.fn>;
+    getUserById: ReturnType<typeof vi.fn>;
   };
-  let configService: { get: jest.Mock };
+  let configService: { get: ReturnType<typeof vi.fn> };
   let mockRes: Partial<Response>;
 
   beforeEach(async () => {
     authService = {
-      generateNonce: jest.fn().mockReturnValue('test-nonce-abc123'),
-      verifySiweAuth: jest.fn().mockResolvedValue({ access_token: 'jwt-token' }),
-      devLogin: jest.fn().mockResolvedValue({ access_token: 'jwt-token' }),
-      getUserById: jest.fn(),
+      generateNonce: vi.fn().mockReturnValue('test-nonce-abc123'),
+      verifySiweAuth: vi.fn().mockResolvedValue({ access_token: 'jwt-token' }),
+      devLogin: vi.fn().mockResolvedValue({ access_token: 'jwt-token' }),
+      getUserById: vi.fn(),
     };
     configService = {
-      get: jest.fn(),
+      get: vi.fn(),
     };
     mockRes = {
-      cookie: jest.fn(),
-      clearCookie: jest.fn(),
+      cookie: vi.fn(),
+      clearCookie: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

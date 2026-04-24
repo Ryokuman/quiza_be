@@ -1,37 +1,33 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
+
+vi.mock('@worldcoin/minikit-js/siwe', () => ({
+  verifySiweMessage: vi.fn(),
+}));
+
+import { verifySiweMessage } from '@worldcoin/minikit-js/siwe';
 import { AuthService } from './auth.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-// PrismaService의 실제 import chain(generated/prisma/client)이
-// import.meta.url을 사용하므로 CJS 모드 Jest에서 동작 불가 — 모듈 전체를 mock
-jest.mock('../prisma/prisma.service', () => ({
-  PrismaService: jest.fn(),
-}));
-
-jest.mock('@worldcoin/minikit-js/siwe', () => ({
-  verifySiweMessage: jest.fn(),
-}));
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { verifySiweMessage } = require('@worldcoin/minikit-js/siwe');
+const mockedVerifySiwe = vi.mocked(verifySiweMessage);
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: { user: { upsert: jest.Mock; findUnique: jest.Mock } };
-  let jwtService: { signAsync: jest.Mock };
+  let prisma: { user: { upsert: ReturnType<typeof vi.fn>; findUnique: ReturnType<typeof vi.fn> } };
+  let jwtService: { signAsync: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     prisma = {
       user: {
-        upsert: jest.fn(),
-        findUnique: jest.fn(),
+        upsert: vi.fn(),
+        findUnique: vi.fn(),
       },
     };
     jwtService = {
-      signAsync: jest.fn().mockResolvedValue('mock-jwt-token'),
+      signAsync: vi.fn().mockResolvedValue('mock-jwt-token'),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -39,7 +35,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
-        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: ConfigService, useValue: { get: vi.fn() } },
       ],
     }).compile();
 
@@ -47,7 +43,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ── Nonce ──────────────────────────────────────────────
@@ -83,10 +79,10 @@ describe('AuthService', () => {
 
     it('만료된 nonce는 false를 반환한다', () => {
       const nonce = service.generateNonce();
-      jest.useFakeTimers();
-      jest.advanceTimersByTime(11 * 60 * 1000); // 11분 경과
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(11 * 60 * 1000);
       expect(service.validateNonce(nonce)).toBe(false);
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 
@@ -139,10 +135,10 @@ describe('AuthService', () => {
 
     it('유효한 서명이면 JWT를 반환하고 유저를 upsert한다', async () => {
       const nonce = service.generateNonce();
-      verifySiweMessage.mockResolvedValue({
+      mockedVerifySiwe.mockResolvedValue({
         isValid: true,
         siweMessageData: { address: '0xAbCdEf1234567890' },
-      });
+      } as any);
       prisma.user.upsert.mockResolvedValue({
         id: 'user-uuid',
         world_id: '0xabcdef1234567890',
@@ -167,10 +163,10 @@ describe('AuthService', () => {
 
     it('무효한 서명이면 BadRequestException을 던진다', async () => {
       const nonce = service.generateNonce();
-      verifySiweMessage.mockResolvedValue({
+      mockedVerifySiwe.mockResolvedValue({
         isValid: false,
         siweMessageData: {},
-      });
+      } as any);
 
       await expect(service.verifySiweAuth(payload, nonce)).rejects.toThrow(
         BadRequestException,
@@ -179,10 +175,10 @@ describe('AuthService', () => {
 
     it('wallet address를 소문자로 정규화한다', async () => {
       const nonce = service.generateNonce();
-      verifySiweMessage.mockResolvedValue({
+      mockedVerifySiwe.mockResolvedValue({
         isValid: true,
         siweMessageData: { address: '0xABCDEF' },
-      });
+      } as any);
       prisma.user.upsert.mockResolvedValue({
         id: 'user-uuid',
         world_id: '0xabcdef',
