@@ -1,4 +1,10 @@
 {
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node"
+    }
+  },
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
@@ -15,7 +21,13 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "strict": true,
     "strictNullChecks": true,
+    "plugins": [
+      { "transform": "typia/lib/transform" },
+      { "transform": "@nestia/core/lib/transform" },
+      { "transform": "@nestia/sdk/lib/transform" }
+    ],
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,

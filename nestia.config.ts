@@ -6,6 +6,14 @@ const config: INestiaConfig = {
   clone: true,
   primitive: true,
   simulate: true,
+  swagger: {
+    openapi: '3.1',
+    output: 'dist/swagger.json',
+    beautify: true,
+    servers: [
+      { url: 'http://localhost:3000', description: 'Local' },
+    ],
+  },
 };
 
 export default config;
