@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { GeminiService } from '../gemini/gemini.service.js';
 
 @Injectable()
 export class AnswersService {
+  private readonly logger = new Logger(AnswersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
@@ -32,6 +34,9 @@ export class AnswersService {
 
     switch (question.type) {
       case 'essay': {
+        if (!question.rubric) {
+          this.logger.warn(`Essay question ${questionId} has no rubric, grading without criteria`);
+        }
         const result = await this.gemini.gradeEssay(
           question.content,
           question.answer,
@@ -53,14 +58,16 @@ export class AnswersService {
         break;
       }
 
-      default: {
-        // multi — 기존 문자열 매칭
+      case 'multi': {
         isCorrect =
           question.answer.trim().toLowerCase() ===
           userAnswer.trim().toLowerCase();
         score = isCorrect ? question.max_score : 0;
         break;
       }
+
+      default:
+        throw new BadRequestException(`Unknown question type: ${question.type}`);
     }
 
     await this.prisma.userAnswer.create({
@@ -87,7 +94,7 @@ export class AnswersService {
   }
 
   /**
-   * 단답형 채점: 편집 거리 ≤ 2 → 정답, > 2 → Gemini 의미 판단
+   * 단답형 채점: 편집 거리 비율 ≤ 30% → 정답, 초과 → Gemini 의미 판단
    */
   private async gradeSingle(
     correctAnswer: string,
@@ -101,8 +108,12 @@ export class AnswersService {
     }
 
     const dist = this.levenshtein(a, b);
-    if (dist <= 2) {
-      return { isCorrect: true, reason: `오타 허용 (편집 거리: ${dist})` };
+    const maxLen = Math.max(a.length, b.length);
+    const ratio = maxLen > 0 ? dist / maxLen : 1;
+
+    // 상대 비율 30% 이하이고 편집 거리 최소 1 이상 → 오타 허용
+    if (ratio <= 0.3 && dist > 0) {
+      return { isCorrect: true, reason: `오타 허용 (편집 거리: ${dist}, 비율: ${Math.round(ratio * 100)}%)` };
     }
 
     // Gemini 의미 판단
@@ -133,6 +144,12 @@ export class AnswersService {
 
   /**
    * HLR 반감기를 갱신한다. 부분점수 반영.
+   *
+   * 반감기 배수 계산:
+   * - ratio = score / maxScore (0.0 ~ 1.0)
+   * - multiplier = 0.5 + 1.5 × ratio
+   *   → 0점: ×0.5 (복습 간격 절반), 만점: ×2.0 (복습 간격 2배)
+   *   → 60% 부분점수: ×1.4 (기존 정답 ×2보다 약한 강화 — 의도적)
    */
   private async updateStats(
     userId: string,
@@ -150,9 +167,7 @@ export class AnswersService {
     const now = new Date();
     const INITIAL_HALF_LIFE = 86400;
 
-    // 부분점수 비율 (0.0 ~ 1.0)
     const ratio = score != null && maxScore > 0 ? score / maxScore : isCorrect ? 1 : 0;
-    // 반감기 배수: 0점 → 0.5, 만점 → 2.0, 부분점수 → 선형 보간
     const multiplier = 0.5 + 1.5 * ratio;
 
     if (!existing) {

@@ -12,12 +12,19 @@ export class AdviceService {
 
   /** 유저의 약점 데이터를 분석하여 개인화 학습 조언을 생성한다. */
   async generateAdvice(userId: string): Promise<IAdviceResult> {
-    // 태그별 통계 집계
+    // 최근 1000건만 조회하여 메모리 사용량 제한
     const answers = await this.prisma.userAnswer.findMany({
       where: { user_id: userId },
-      include: {
+      orderBy: { answered_at: 'desc' },
+      take: 1000,
+      select: {
+        is_correct: true,
+        score: true,
         question: {
-          include: { tag: { select: { name: true } } },
+          select: {
+            max_score: true,
+            tag: { select: { name: true } },
+          },
         },
       },
     });
@@ -60,7 +67,11 @@ export class AdviceService {
       };
     }
 
-    const advice = await this.generateGeminiAdvice(weakTags);
+    const statsText = weakTags
+      .map((t) => `- ${t.tag}: 정답률 ${t.accuracy}%, 점수율 ${t.scoreRate}%, 총 ${t.total}문제`)
+      .join('\n');
+
+    const advice = await this.gemini.generateAdvice(statsText);
 
     return {
       advice,
@@ -71,30 +82,5 @@ export class AdviceService {
         total_attempts: t.total,
       })),
     };
-  }
-
-  private async generateGeminiAdvice(
-    weakTags: { tag: string; accuracy: number; scoreRate: number; total: number }[],
-  ): Promise<string> {
-    const model = this.gemini['client'].getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-    const statsText = weakTags
-      .map((t) => `- ${t.tag}: 정답률 ${t.accuracy}%, 점수율 ${t.scoreRate}%, 총 ${t.total}문제`)
-      .join('\n');
-
-    const result = await model.generateContent(
-      `당신은 학습 코치입니다. 아래는 학생의 약점 태그 분석 결과입니다.
-
-${statsText}
-
-위 데이터를 바탕으로:
-1. 가장 시급히 보완해야 할 영역
-2. 구체적인 학습 전략 (2~3가지)
-3. 격려의 말
-
-한국어로 300자 내외로 조언해주세요. 마크다운 없이 평문으로.`,
-    );
-
-    return result.response.text().trim();
   }
 }
