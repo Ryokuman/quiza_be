@@ -11,15 +11,21 @@ export class QuestionsService {
    * TODO: Gemini API 연동으로 교체 예정
    */
   async generate(input: IGenerateQuestions): Promise<IQuestion[]> {
+    // Tag 이름 조회 (플레이스홀더 콘텐츠 생성용)
+    const tag = await this.prisma.tag.findUniqueOrThrow({
+      where: { id: input.tagId },
+      select: { id: true, name: true },
+    });
+
     const questions = Array.from({ length: input.count }, (_, i) =>
-      this.buildPlaceholder(input.tag, input.difficulty, i + 1),
+      this.buildPlaceholder(tag.id, tag.name, input.difficulty, i + 1),
     );
 
     const created = await Promise.all(
       questions.map((q) =>
         this.prisma.question.create({
           data: {
-            tag: q.tag,
+            tag_id: q.tagId,
             type: q.type,
             difficulty: q.difficulty,
             content: q.content,
@@ -33,7 +39,7 @@ export class QuestionsService {
 
     return created.map((row) => ({
       id: row.id as IQuestion['id'],
-      tag: row.tag,
+      tag: { id: tag.id, name: tag.name },
       type: row.type as IQuestion['type'],
       difficulty: row.difficulty,
       content: row.content,
@@ -46,11 +52,12 @@ export class QuestionsService {
 
   /** 태그별 플레이스홀더 문제를 만든다. */
   private buildPlaceholder(
-    tag: string,
+    tagId: string,
+    tagName: string,
     difficulty: number,
     index: number,
   ): {
-    tag: string;
+    tagId: string;
     type: 'multi' | 'single';
     difficulty: number;
     content: string;
@@ -58,13 +65,13 @@ export class QuestionsService {
     answer: string;
     explanation: string | null;
   } {
-    switch (tag) {
+    switch (tagName) {
       case 'grammar':
-        return this.buildGrammarQuestion(difficulty, index);
+        return { tagId, ...this.buildGrammarQuestion(difficulty, index) };
       case 'vocabulary':
-        return this.buildVocabularyQuestion(difficulty, index);
+        return { tagId, ...this.buildVocabularyQuestion(difficulty, index) };
       default:
-        return this.buildGenericQuestion(tag, difficulty, index);
+        return { tagId, ...this.buildGenericQuestion(tagName, difficulty, index) };
     }
   }
 
@@ -88,7 +95,6 @@ export class QuestionsService {
     const i = (index - 1 + difficulty - 1) % sentences.length;
 
     return {
-      tag: 'grammar',
       type: 'multi' as const,
       difficulty,
       content: `[Grammar Lv.${difficulty} #${index}] Choose the correct word: "${sentences[i]}"`,
@@ -112,7 +118,6 @@ export class QuestionsService {
     const options = [w.def, ...w.wrong].sort(() => Math.random() - 0.5);
 
     return {
-      tag: 'vocabulary',
       type: 'multi' as const,
       difficulty,
       content: `[Vocabulary Lv.${difficulty} #${index}] What does "${w.word}" mean?`,
@@ -122,15 +127,14 @@ export class QuestionsService {
     };
   }
 
-  private buildGenericQuestion(tag: string, difficulty: number, index: number) {
+  private buildGenericQuestion(tagName: string, difficulty: number, index: number) {
     return {
-      tag,
       type: 'multi' as const,
       difficulty,
-      content: `[${tag} Lv.${difficulty} #${index}] Placeholder question for "${tag}" topic.`,
+      content: `[${tagName} Lv.${difficulty} #${index}] Placeholder question for "${tagName}" topic.`,
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
       answer: 'Option A',
-      explanation: `This is a placeholder question for the "${tag}" category.`,
+      explanation: `This is a placeholder question for the "${tagName}" category.`,
     };
   }
 }

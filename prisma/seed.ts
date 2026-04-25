@@ -1,695 +1,309 @@
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../generated/prisma/client.js';
 import 'dotenv/config';
+import { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const adapter = new PrismaPg({
-  connectionString: process.env['DATABASE_URL']!,
-});
+const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL']! });
 const prisma = new PrismaClient({ adapter });
 
+// ── 도메인 → 태그 → 문제 시드 데이터 ──
+
 interface SeedQuestion {
-  tag: string;
   type: string;
   difficulty: number;
   content: string;
   options: string[];
   answer: string;
-  explanation: string;
+  explanation?: string;
 }
 
-const questions: SeedQuestion[] = [
-  // ── grammar, difficulty 1 ──
-  {
-    tag: 'grammar',
-    type: 'multi',
-    difficulty: 1,
-    content: 'Choose the correct form: "She ___ to school every day."',
-    options: ['go', 'goes', 'going', 'gone'],
-    answer: 'B',
-    explanation:
-      'Third-person singular subjects (he/she/it) take the verb form ending in -s/-es in the simple present tense.',
-  },
-  {
-    tag: 'grammar',
-    type: 'single',
-    difficulty: 1,
-    content:
-      'Fill in the blank with the correct article: "___ sun rises in the east."',
-    options: [],
-    answer: 'The',
-    explanation:
-      '"The" is used before unique nouns that both speaker and listener can identify — there is only one sun.',
-  },
-  // ── grammar, difficulty 2 ──
-  {
-    tag: 'grammar',
-    type: 'multi',
-    difficulty: 2,
-    content:
-      'Which sentence is correct?',
-    options: [
-      'He don\'t like coffee.',
-      'He doesn\'t likes coffee.',
-      'He doesn\'t like coffee.',
-      'He not like coffee.',
-    ],
-    answer: 'C',
-    explanation:
-      'In negative simple-present sentences with third-person singular subjects, use "doesn\'t" + base verb.',
-  },
-  {
-    tag: 'grammar',
-    type: 'single',
-    difficulty: 2,
-    content:
-      'Rewrite using the past tense: "I eat breakfast at 7 a.m." → "I ___ breakfast at 7 a.m."',
-    options: [],
-    answer: 'ate',
-    explanation:
-      '"Ate" is the irregular past tense of "eat."',
-  },
-  // ── grammar, difficulty 3 ──
-  {
-    tag: 'grammar',
-    type: 'multi',
-    difficulty: 3,
-    content:
-      'Choose the correct relative pronoun: "The book ___ I borrowed from the library was fascinating."',
-    options: ['who', 'which', 'whom', 'whose'],
-    answer: 'B',
-    explanation:
-      '"Which" is used for things. "Who/whom" refer to people, and "whose" shows possession.',
-  },
-  {
-    tag: 'grammar',
-    type: 'single',
-    difficulty: 3,
-    content:
-      'Correct the error: "If I was you, I would apologize." What word should replace "was"?',
-    options: [],
-    answer: 'were',
-    explanation:
-      'In subjunctive/conditional sentences expressing hypothetical situations, "were" is used for all subjects.',
-  },
-  // ── grammar, difficulty 4 ──
-  {
-    tag: 'grammar',
-    type: 'multi',
-    difficulty: 4,
-    content:
-      'Select the sentence that correctly uses the past perfect tense.',
-    options: [
-      'She has finished her homework before dinner.',
-      'She had finished her homework before dinner started.',
-      'She finished her homework before dinner had started.',
-      'She was finishing her homework before dinner.',
-    ],
-    answer: 'B',
-    explanation:
-      'The past perfect ("had finished") describes an action completed before another past action ("dinner started").',
-  },
-  {
-    tag: 'grammar',
-    type: 'single',
-    difficulty: 4,
-    content:
-      'Fill in the blank: "Not only ___ he pass the exam, but he also got the highest score." (auxiliary verb)',
-    options: [],
-    answer: 'did',
-    explanation:
-      '"Not only" at the start of a clause triggers subject-auxiliary inversion, requiring "did."',
-  },
-  // ── grammar, difficulty 5 ──
-  {
-    tag: 'grammar',
-    type: 'multi',
-    difficulty: 5,
-    content:
-      'Which sentence correctly demonstrates the third conditional?',
-    options: [
-      'If I studied harder, I would pass the exam.',
-      'If I had studied harder, I would have passed the exam.',
-      'If I have studied harder, I will pass the exam.',
-      'If I would study harder, I passed the exam.',
-    ],
-    answer: 'B',
-    explanation:
-      'The third conditional uses "if + past perfect" in the condition clause and "would have + past participle" in the result clause to describe unreal past situations.',
-  },
-  {
-    tag: 'grammar',
-    type: 'single',
-    difficulty: 5,
-    content:
-      'Identify the grammatical function of "running" in: "Running a marathon requires months of training." (noun/adjective/verb)',
-    options: [],
-    answer: 'noun',
-    explanation:
-      '"Running" functions as a gerund (verbal noun) serving as the subject of the sentence.',
-  },
+interface SeedTag {
+  name: string;
+  questions: SeedQuestion[];
+}
 
-  // ── vocabulary, difficulty 1 ──
-  {
-    tag: 'vocabulary',
-    type: 'multi',
-    difficulty: 1,
-    content: 'What is the opposite of "hot"?',
-    options: ['warm', 'cold', 'cool', 'mild'],
-    answer: 'B',
-    explanation: '"Cold" is the direct antonym of "hot."',
-  },
-  {
-    tag: 'vocabulary',
-    type: 'single',
-    difficulty: 1,
-    content:
-      'What word means "a place where you sleep at night," starting with "b"?',
-    options: [],
-    answer: 'bed',
-    explanation: 'A "bed" is a piece of furniture used for sleeping.',
-  },
-  // ── vocabulary, difficulty 2 ──
-  {
-    tag: 'vocabulary',
-    type: 'multi',
-    difficulty: 2,
-    content: 'Choose the word that best completes: "The weather forecast predicts heavy ___ tomorrow."',
-    options: ['rain', 'rein', 'reign', 'rane'],
-    answer: 'A',
-    explanation:
-      '"Rain" means water falling from clouds. "Rein" is a strap for horses; "reign" means to rule.',
-  },
-  {
-    tag: 'vocabulary',
-    type: 'single',
-    difficulty: 2,
-    content: 'What is a synonym for "happy"?',
-    options: [],
-    answer: 'glad',
-    explanation:
-      '"Glad," "joyful," and "pleased" are all synonyms of "happy."',
-  },
-  // ── vocabulary, difficulty 3 ──
-  {
-    tag: 'vocabulary',
-    type: 'multi',
-    difficulty: 3,
-    content: 'What does "ambiguous" mean?',
-    options: [
-      'Very clear',
-      'Open to more than one interpretation',
-      'Extremely large',
-      'Carefully planned',
-    ],
-    answer: 'B',
-    explanation:
-      '"Ambiguous" means having more than one possible meaning or interpretation.',
-  },
-  {
-    tag: 'vocabulary',
-    type: 'single',
-    difficulty: 3,
-    content:
-      'Complete the idiom: "Break the ___" (meaning to start a conversation in an awkward situation).',
-    options: [],
-    answer: 'ice',
-    explanation:
-      '"Break the ice" means to relieve tension or initiate conversation in social situations.',
-  },
-  // ── vocabulary, difficulty 4 ──
-  {
-    tag: 'vocabulary',
-    type: 'multi',
-    difficulty: 4,
-    content:
-      'Choose the word that means "to make something less severe or intense."',
-    options: ['mitigate', 'instigate', 'aggregate', 'fabricate'],
-    answer: 'A',
-    explanation:
-      '"Mitigate" means to lessen or reduce the severity of something. "Instigate" means to provoke.',
-  },
-  {
-    tag: 'vocabulary',
-    type: 'single',
-    difficulty: 4,
-    content:
-      'What adjective describes someone who is "unwilling to spend money"? (starts with "f")',
-    options: [],
-    answer: 'frugal',
-    explanation:
-      '"Frugal" describes someone who is economical and avoids unnecessary spending.',
-  },
-  // ── vocabulary, difficulty 5 ──
-  {
-    tag: 'vocabulary',
-    type: 'multi',
-    difficulty: 5,
-    content: 'What does "ephemeral" mean?',
-    options: [
-      'Lasting for a very long time',
-      'Lasting for a very short time',
-      'Extremely beautiful',
-      'Deeply spiritual',
-    ],
-    answer: 'B',
-    explanation:
-      '"Ephemeral" means lasting for a very short period — fleeting or transient.',
-  },
-  {
-    tag: 'vocabulary',
-    type: 'single',
-    difficulty: 5,
-    content:
-      'What noun means "an intense and widely shared enthusiasm for something, especially one that is short-lived"? (starts with "f")',
-    options: [],
-    answer: 'fad',
-    explanation:
-      'A "fad" is an intense but short-lived trend or craze. "Frenzy" is also acceptable.',
-  },
+interface SeedDomain {
+  name: string;
+  description: string;
+  tags: SeedTag[];
+}
 
-  // ── reading, difficulty 1 ──
+const SEED_DATA: SeedDomain[] = [
   {
-    tag: 'reading',
-    type: 'multi',
-    difficulty: 1,
-    content:
-      'Read: "Tom has a red ball. He likes to play with it in the park." What color is Tom\'s ball?',
-    options: ['Blue', 'Green', 'Red', 'Yellow'],
-    answer: 'C',
-    explanation: 'The passage explicitly states "Tom has a red ball."',
-  },
-  {
-    tag: 'reading',
-    type: 'single',
-    difficulty: 1,
-    content:
-      'Read: "Maria wakes up at 6 a.m. She brushes her teeth and eats cereal." What does Maria eat for breakfast?',
-    options: [],
-    answer: 'cereal',
-    explanation: 'The passage says "She … eats cereal."',
-  },
-  // ── reading, difficulty 2 ──
-  {
-    tag: 'reading',
-    type: 'multi',
-    difficulty: 2,
-    content:
-      'Read: "Dolphins are mammals that live in the ocean. Unlike fish, they breathe air through a blowhole on top of their heads." How do dolphins breathe?',
-    options: [
-      'Through gills',
-      'Through their mouth',
-      'Through a blowhole',
-      'Through their skin',
+    name: '토익',
+    description: 'TOEIC 시험 대비 영어 학습',
+    tags: [
+      {
+        name: 'listening',
+        questions: [
+          { type: 'multi', difficulty: 1, content: 'Part 1에서 주로 출제되는 문제 유형은?', options: ['사진 묘사', '질의응답', '짧은 대화', '긴 대화'], answer: '사진 묘사' },
+          { type: 'multi', difficulty: 2, content: '"Where is the meeting held?" 에 대한 적절한 응답은?', options: ['Yes, I held it.', 'In the conference room.', 'At 3 o\'clock.', 'Mr. Kim did.'], answer: 'In the conference room.' },
+        ],
+      },
+      {
+        name: 'grammar',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '"She ___ to school every day." 빈칸에 알맞은 것은?', options: ['go', 'goes', 'going', 'gone'], answer: 'goes', explanation: '3인칭 단수 현재형에는 -es를 붙입니다.' },
+          { type: 'multi', difficulty: 2, content: '"If I ___ rich, I would travel the world." 빈칸에 알맞은 것은?', options: ['am', 'was', 'were', 'be'], answer: 'were', explanation: '가정법 과거에서는 be동사를 were로 씁니다.' },
+          { type: 'multi', difficulty: 3, content: '"The report ___ by the time the meeting starts." 빈칸에 알맞은 것은?', options: ['will complete', 'will be completed', 'will have been completed', 'is completing'], answer: 'will have been completed', explanation: '미래완료 수동태입니다.' },
+        ],
+      },
+      {
+        name: 'vocabulary',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '"Abundant"의 의미는?', options: ['부족한', '풍부한', '평범한', '희���한'], answer: '풍부한' },
+          { type: 'multi', difficulty: 3, content: '"Ubiquitous"의 의미는?', options: ['어디에나 있는', '독특한', '희귀한', '위험한'], answer: '어디에나 있는' },
+        ],
+      },
+      {
+        name: 'reading',
+        questions: [
+          { type: 'multi', difficulty: 2, content: '다음 중 "nevertheless"와 가장 비슷한 의미는?', options: ['therefore', 'however', 'moreover', 'furthermore'], answer: 'however' },
+          { type: 'multi', difficulty: 3, content: 'Part 7 지문에서 "infer" 문제가 요구하는 것은?', options: ['직접 언급된 정보', '추론된 정보', '작성자의 이름', '날짜 정보'], answer: '추론된 정보' },
+        ],
+      },
     ],
-    answer: 'C',
-    explanation: 'The passage states dolphins "breathe air through a blowhole."',
   },
   {
-    tag: 'reading',
-    type: 'single',
-    difficulty: 2,
-    content:
-      'Read: "The library closes at 8 p.m. on weekdays and 5 p.m. on weekends." What time does the library close on Saturday?',
-    options: [],
-    answer: '5 p.m.',
-    explanation: 'Saturday is a weekend day, and the library closes at 5 p.m. on weekends.',
-  },
-  // ── reading, difficulty 3 ──
-  {
-    tag: 'reading',
-    type: 'multi',
-    difficulty: 3,
-    content:
-      'Read: "Although renewable energy sources like solar and wind power are becoming more affordable, fossil fuels still account for over 80% of global energy consumption." What is the main idea?',
-    options: [
-      'Fossil fuels are no longer used.',
-      'Renewable energy is too expensive.',
-      'Fossil fuels still dominate despite renewable growth.',
-      'Solar power is the cheapest energy source.',
+    name: '대수학',
+    description: '방정식, 함수, 수열 등 대수적 사고',
+    tags: [
+      {
+        name: '방정식',
+        questions: [
+          { type: 'single', difficulty: 1, content: '2x + 3 = 11 일 때 x의 값은?', options: [], answer: '4', explanation: '2x = 8, x = 4' },
+          { type: 'multi', difficulty: 2, content: 'x² - 5x + 6 = 0 의 근은?', options: ['1, 6', '2, 3', '-2, -3', '1, 5'], answer: '2, 3', explanation: '(x-2)(x-3) = 0' },
+        ],
+      },
+      {
+        name: '함수',
+        questions: [
+          { type: 'single', difficulty: 3, content: 'f(x) = 2x + 1 일 때 f(3)의 값은?', options: [], answer: '7', explanation: 'f(3) = 2(3) + 1 = 7' },
+        ],
+      },
+      {
+        name: '미적분',
+        questions: [
+          { type: 'single', difficulty: 4, content: 'f(x) = 3x² + 2x 일 때 f\'(x)는?', options: [], answer: '6x + 2', explanation: '미분: 3·2x + 2 = 6x + 2' },
+        ],
+      },
     ],
-    answer: 'C',
-    explanation:
-      'The passage contrasts growing affordability of renewables with the continued dominance of fossil fuels.',
   },
   {
-    tag: 'reading',
-    type: 'single',
-    difficulty: 3,
-    content:
-      'Read: "The experiment yielded unexpected results: the control group performed better than the test group." Which group performed better?',
-    options: [],
-    answer: 'control group',
-    explanation:
-      'The passage directly states "the control group performed better than the test group."',
-  },
-  // ── reading, difficulty 4 ──
-  {
-    tag: 'reading',
-    type: 'multi',
-    difficulty: 4,
-    content:
-      'Read: "Critics argue that social media creates echo chambers, reinforcing existing beliefs rather than exposing users to diverse viewpoints. Proponents counter that it democratizes information." What do critics believe about social media?',
-    options: [
-      'It provides diverse viewpoints.',
-      'It reinforces existing beliefs.',
-      'It democratizes information.',
-      'It has no effect on opinions.',
+    name: '기하학',
+    description: '도형, 공간, 좌표 관련 수학',
+    tags: [
+      {
+        name: '평면도형',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '삼각형의 내각의 합은?', options: ['90°', '180°', '270°', '360°'], answer: '180°' },
+          { type: 'multi', difficulty: 3, content: '반지름이 5인 원의 넓이는? (π ≈ 3.14)', options: ['31.4', '78.5', '15.7', '25'], answer: '78.5', explanation: 'πr² = 3.14 × 25 = 78.5' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation:
-      'Critics argue social media "reinforces existing beliefs" by creating echo chambers.',
   },
   {
-    tag: 'reading',
-    type: 'single',
-    difficulty: 4,
-    content:
-      'Read: "The author employs an unreliable narrator to blur the line between fact and fiction, leaving readers to determine what actually occurred." What literary device is used?',
-    options: [],
-    answer: 'unreliable narrator',
-    explanation:
-      'The passage explicitly mentions the use of an "unreliable narrator" as a literary device.',
-  },
-  // ── reading, difficulty 5 ──
-  {
-    tag: 'reading',
-    type: 'multi',
-    difficulty: 5,
-    content:
-      'Read: "The paradox of thrift suggests that while individual saving is prudent, widespread saving during a recession can reduce aggregate demand, deepening the economic downturn." What is the paradox?',
-    options: [
-      'Saving money is always beneficial for the economy.',
-      'Individual prudence can harm the collective economy.',
-      'Recessions are caused by excessive spending.',
-      'Thrift leads to inflation.',
+    name: 'JavaScript',
+    description: 'JavaScript 프로그래밍 언어',
+    tags: [
+      {
+        name: '기초문법',
+        questions: [
+          { type: 'multi', difficulty: 1, content: 'JavaScript에서 변수를 선언하는 키워드가 아닌 것은?', options: ['let', 'const', 'var', 'int'], answer: 'int' },
+          { type: 'multi', difficulty: 2, content: '`typeof null`의 결과는?', options: ['"null"', '"undefined"', '"object"', '"boolean"'], answer: '"object"', explanation: 'JavaScript의 역사적 버그입니다.' },
+        ],
+      },
+      {
+        name: '비동기',
+        questions: [
+          { type: 'multi', difficulty: 3, content: 'Promise의 세 가지 상태가 아닌 것은?', options: ['pending', 'fulfilled', 'rejected', 'completed'], answer: 'completed' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation:
-      'The paradox of thrift states that what is rational for individuals (saving) can be harmful to the overall economy when everyone does it simultaneously.',
   },
   {
-    tag: 'reading',
-    type: 'single',
-    difficulty: 5,
-    content:
-      'Read: "Orwell\'s dystopian vision in 1984 presciently anticipated mass surveillance, propaganda, and the manipulation of truth by authoritarian regimes." What adjective means "having knowledge of events before they occur"?',
-    options: [],
-    answer: 'prescient',
-    explanation:
-      '"Presciently" (adverb form of "prescient") means having foreknowledge or foresight about future events.',
-  },
-
-  // ── listening, difficulty 1 ──
-  {
-    tag: 'listening',
-    type: 'multi',
-    difficulty: 1,
-    content:
-      'You hear: "Excuse me, where is the nearest bus stop?" What is the speaker looking for?',
-    options: ['A taxi', 'A bus stop', 'A train station', 'An airport'],
-    answer: 'B',
-    explanation: 'The speaker asks for "the nearest bus stop."',
-  },
-  {
-    tag: 'listening',
-    type: 'single',
-    difficulty: 1,
-    content:
-      'You hear: "Can I have a glass of water, please?" What drink is being requested?',
-    options: [],
-    answer: 'water',
-    explanation: 'The speaker asks for "a glass of water."',
-  },
-  // ── listening, difficulty 2 ──
-  {
-    tag: 'listening',
-    type: 'multi',
-    difficulty: 2,
-    content:
-      'You hear: "The meeting has been postponed to next Thursday at 3 p.m." When is the new meeting time?',
-    options: [
-      'This Thursday at 3 p.m.',
-      'Next Thursday at 3 p.m.',
-      'Next Friday at 3 p.m.',
-      'This Wednesday at 3 p.m.',
+    name: 'Python',
+    description: 'Python 프로그래밍 언어',
+    tags: [
+      {
+        name: '기초문법',
+        questions: [
+          { type: 'multi', difficulty: 1, content: 'Python에서 리스트에 요소를 추가하는 메서드는?', options: ['add()', 'append()', 'push()', 'insert_end()'], answer: 'append()' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation: 'The meeting was rescheduled to "next Thursday at 3 p.m."',
   },
   {
-    tag: 'listening',
-    type: 'single',
-    difficulty: 2,
-    content:
-      'You hear: "I\'d like to book a table for four at seven o\'clock." How many people is the reservation for?',
-    options: [],
-    answer: '4',
-    explanation: 'The speaker says "a table for four."',
-  },
-  // ── listening, difficulty 3 ──
-  {
-    tag: 'listening',
-    type: 'multi',
-    difficulty: 3,
-    content:
-      'You hear: "I wouldn\'t mind going to the beach, but the weather forecast says it might rain. Maybe we should go to the museum instead." What does the speaker suggest?',
-    options: [
-      'Going to the beach regardless',
-      'Staying home',
-      'Going to the museum',
-      'Checking the weather again',
+    name: '알고리즘',
+    description: '자료구조와 알고리즘',
+    tags: [
+      {
+        name: '정렬',
+        questions: [
+          { type: 'multi', difficulty: 3, content: '퀵소트의 평균 시간복잡도는?', options: ['O(n)', 'O(n log n)', 'O(n²)', 'O(log n)'], answer: 'O(n log n)' },
+        ],
+      },
+      {
+        name: 'SQL',
+        questions: [
+          { type: 'multi', difficulty: 2, content: 'SQL에서 중복을 제거하는 키워드는?', options: ['UNIQUE', 'DISTINCT', 'DIFFERENT', 'SINGLE'], answer: 'DISTINCT' },
+        ],
+      },
     ],
-    answer: 'C',
-    explanation: 'The speaker suggests the museum as an alternative due to possible rain.',
   },
   {
-    tag: 'listening',
-    type: 'single',
-    difficulty: 3,
-    content:
-      'You hear: "Could you pick up some milk and eggs on your way home? Oh, and we\'re also out of bread." How many items are requested?',
-    options: [],
-    answer: '3',
-    explanation: 'Three items are requested: milk, eggs, and bread.',
-  },
-  // ── listening, difficulty 4 ──
-  {
-    tag: 'listening',
-    type: 'multi',
-    difficulty: 4,
-    content:
-      'You hear: "While I appreciate the offer, I\'m afraid I\'ll have to decline. My schedule is quite packed this month." What is the speaker doing?',
-    options: [
-      'Accepting an invitation',
-      'Politely refusing an offer',
-      'Asking for more time',
-      'Complaining about their workload',
+    name: '제과제빵',
+    description: '빵, 케이크, 과자 만들기',
+    tags: [
+      {
+        name: '반죽',
+        questions: [
+          { type: 'multi', difficulty: 3, content: '빵 반죽에서 글루텐이 형성되는 주재료는?', options: ['설탕', '밀가루', '버터', '이스트'], answer: '밀가루' },
+        ],
+      },
+      {
+        name: '발효',
+        questions: [
+          { type: 'multi', difficulty: 2, content: '이스트 발효에 가장 적합한 온도 범위는?', options: ['0~10°C', '25~35°C', '50~60°C', '70~80°C'], answer: '25~35°C' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation:
-      'Phrases like "I appreciate the offer" followed by "I\'ll have to decline" indicate a polite refusal.',
   },
   {
-    tag: 'listening',
-    type: 'single',
-    difficulty: 4,
-    content:
-      'You hear: "The flight\'s been delayed by two hours, so instead of arriving at noon, we\'ll get in around 2 p.m." What was the original arrival time?',
-    options: [],
-    answer: 'noon',
-    explanation:
-      'The speaker says "instead of arriving at noon," indicating noon was the original time.',
-  },
-  // ── listening, difficulty 5 ──
-  {
-    tag: 'listening',
-    type: 'multi',
-    difficulty: 5,
-    content:
-      'You hear: "The lecturer implied that the correlation between the variables was spurious, suggesting confounding factors were at play." What did the lecturer suggest about the correlation?',
-    options: [
-      'It was statistically significant.',
-      'It was caused by a direct relationship.',
-      'It was misleading due to hidden variables.',
-      'It proved the hypothesis correct.',
+    name: '한식조리',
+    description: '한국 전통 요리 및 조리법',
+    tags: [
+      {
+        name: '기초',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '된장찌개의 기본 재료가 아닌 것은?', options: ['된장', '두부', '고추장', '파'], answer: '고추장' },
+          { type: 'multi', difficulty: 1, content: '계란을 삶을 때 반숙이 되려면 끓는 물에 약 몇 분?', options: ['3분', '6분', '12분', '20분'], answer: '6분' },
+        ],
+      },
+      {
+        name: '위생안전',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '식중독 예방을 위한 올바른 손씻기 시간은 최소?', options: ['5초', '10초', '20초', '60초'], answer: '20초' },
+        ],
+      },
     ],
-    answer: 'C',
-    explanation:
-      '"Spurious correlation" means the apparent relationship is misleading, caused by confounding (hidden) factors rather than a direct causal link.',
   },
   {
-    tag: 'listening',
-    type: 'single',
-    difficulty: 5,
-    content:
-      'You hear: "He spoke with such eloquence that even his detractors were momentarily swayed." What does "detractors" mean?',
-    options: [],
-    answer: 'critics',
-    explanation:
-      '"Detractors" are people who criticize or disparage someone. Synonyms include "critics" and "opponents."',
-  },
-
-  // ── writing, difficulty 1 ──
-  {
-    tag: 'writing',
-    type: 'multi',
-    difficulty: 1,
-    content: 'Which is the correct way to start a sentence?',
-    options: [
-      'the cat is sleeping.',
-      'The cat is sleeping.',
-      'the Cat is sleeping.',
-      'THE cat is sleeping.',
+    name: '일본어',
+    description: '일본어 학습 (히라가나, 문법, 한자)',
+    tags: [
+      {
+        name: '히라가나',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '"あ"의 발음은?', options: ['a', 'i', 'u', 'e'], answer: 'a' },
+        ],
+      },
+      {
+        name: '문법',
+        questions: [
+          { type: 'multi', difficulty: 2, content: '"私は学生です"의 의미는?', options: ['나는 선생님입니다', '나는 학생입니다', '나는 회사원입니다', '나는 의사입니다'], answer: '나는 학생입니다' },
+          { type: 'multi', difficulty: 4, content: '"彼は走りながら音楽を聴いている"에서 "ながら"의 역할은?', options: ['이유', '동시 동작', '역접', '조건'], answer: '동시 동작' },
+        ],
+      },
+      {
+        name: '어휘',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '"ありがとう"의 의미는?', options: ['안녕하세요', '감사합니다', '죄송합니다', '잘 부탁합니다'], answer: '감사합니다' },
+        ],
+      },
+      {
+        name: '한자',
+        questions: [
+          { type: 'multi', difficulty: 3, content: '"食べる(たべる)"의 의미는?', options: ['자다', '먹다', '마시다', '걷다'], answer: '먹다' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation:
-      'Sentences begin with a capital letter on the first word only (proper nouns aside).',
   },
   {
-    tag: 'writing',
-    type: 'single',
-    difficulty: 1,
-    content:
-      'What punctuation mark goes at the end of a question? (type the symbol)',
-    options: [],
-    answer: '?',
-    explanation: 'Questions end with a question mark (?).',
-  },
-  // ── writing, difficulty 2 ──
-  {
-    tag: 'writing',
-    type: 'multi',
-    difficulty: 2,
-    content:
-      'Which sentence uses a comma correctly?',
-    options: [
-      'I bought apples oranges and bananas.',
-      'I bought apples, oranges, and bananas.',
-      'I bought, apples oranges and bananas.',
-      'I bought apples oranges, and bananas.',
+    name: '한국사',
+    description: '한국 역사 전반',
+    tags: [
+      {
+        name: '고대',
+        questions: [
+          { type: 'multi', difficulty: 1, content: '고조선의 건국 신화에서 건국자는?', options: ['주몽', '단군왕검', '혁거세', '온조'], answer: '단군왕검' },
+        ],
+      },
+      {
+        name: '고려',
+        questions: [
+          { type: 'multi', difficulty: 2, content: '고려를 건국한 인물은?', options: ['왕건', '궁예', '견훤', '이성계'], answer: '왕건' },
+        ],
+      },
+      {
+        name: '조선',
+        questions: [
+          { type: 'multi', difficulty: 2, content: '훈민정음을 창제한 왕은?', options: ['태종', '세종', '성종', '영조'], answer: '세종' },
+          { type: 'multi', difficulty: 4, content: '임진왜란에서 거북선을 이끈 장군은?', options: ['권율', '이순신', '곽재우', '김시민'], answer: '이순신' },
+        ],
+      },
+      {
+        name: '근현대',
+        questions: [
+          { type: 'multi', difficulty: 3, content: '3·1 운동이 일어난 해는?', options: ['1910년', '1919년', '1945년', '1950년'], answer: '1919년' },
+        ],
+      },
     ],
-    answer: 'B',
-    explanation:
-      'Commas separate items in a list. The Oxford comma before "and" is also acceptable.',
-  },
-  {
-    tag: 'writing',
-    type: 'single',
-    difficulty: 2,
-    content:
-      'Combine these two sentences using "because": "She stayed home. She was sick." Write the combined sentence.',
-    options: [],
-    answer: 'She stayed home because she was sick.',
-    explanation:
-      '"Because" joins a cause (she was sick) to an effect (she stayed home).',
-  },
-  // ── writing, difficulty 3 ──
-  {
-    tag: 'writing',
-    type: 'multi',
-    difficulty: 3,
-    content:
-      'Which transition word best shows contrast?',
-    options: ['Furthermore', 'However', 'Similarly', 'Therefore'],
-    answer: 'B',
-    explanation:
-      '"However" introduces a contrasting idea. "Furthermore" adds information; "therefore" shows cause-effect.',
-  },
-  {
-    tag: 'writing',
-    type: 'single',
-    difficulty: 3,
-    content:
-      'Rewrite in passive voice: "The chef prepared the meal." → "The meal ___ by the chef."',
-    options: [],
-    answer: 'was prepared',
-    explanation:
-      'Passive voice: subject + was/were + past participle. "The meal was prepared by the chef."',
-  },
-  // ── writing, difficulty 4 ──
-  {
-    tag: 'writing',
-    type: 'multi',
-    difficulty: 4,
-    content:
-      'Which sentence demonstrates correct use of a semicolon?',
-    options: [
-      'I like coffee; and tea.',
-      'I like coffee; however, I prefer tea.',
-      'I like; coffee and tea.',
-      'I like coffee however; I prefer tea.',
-    ],
-    answer: 'B',
-    explanation:
-      'A semicolon joins two independent clauses. When followed by a conjunctive adverb like "however," a comma follows the adverb.',
-  },
-  {
-    tag: 'writing',
-    type: 'single',
-    difficulty: 4,
-    content:
-      'What is the term for a deliberate exaggeration used for emphasis in writing? (e.g., "I\'ve told you a million times")',
-    options: [],
-    answer: 'hyperbole',
-    explanation:
-      'Hyperbole is a figure of speech that uses extreme exaggeration for emphasis or effect.',
-  },
-  // ── writing, difficulty 5 ──
-  {
-    tag: 'writing',
-    type: 'multi',
-    difficulty: 5,
-    content:
-      'Which of the following best describes "parallel structure" in writing?',
-    options: [
-      'Using the same grammatical form for items in a series.',
-      'Writing sentences of exactly the same length.',
-      'Repeating the same word at the start of every sentence.',
-      'Using two paragraphs that mirror each other.',
-    ],
-    answer: 'A',
-    explanation:
-      'Parallel structure (parallelism) means using the same grammatical pattern for coordinated elements, e.g., "reading, writing, and speaking."',
-  },
-  {
-    tag: 'writing',
-    type: 'single',
-    difficulty: 5,
-    content:
-      'What rhetorical device places two contrasting ideas side by side for effect? (e.g., "It was the best of times, it was the worst of times.")',
-    options: [],
-    answer: 'antithesis',
-    explanation:
-      'Antithesis juxtaposes two opposing ideas in a balanced structure to highlight their contrast.',
   },
 ];
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('[seed] Seeding domains, tags, and questions...');
 
-  // 1. Upsert the 영어 (English) domain
-  const domain = await prisma.domain.upsert({
-    where: { name: '영어' },
-    update: {},
-    create: { name: '영어' },
-  });
-  console.log(`Domain upserted: ${domain.name} (${domain.id})`);
+  for (const domainData of SEED_DATA) {
+    // 1. Domain upsert
+    const domain = await prisma.domain.upsert({
+      where: { name: domainData.name },
+      update: { description: domainData.description },
+      create: { name: domainData.name, description: domainData.description },
+    });
+    console.log(`[seed] Domain: ${domain.name} (${domain.id})`);
 
-  // 2. Insert 50 seed questions
-  const result = await prisma.question.createMany({
-    data: questions,
-    skipDuplicates: true,
-  });
-  console.log(`Questions created: ${result.count}`);
+    for (const tagData of domainData.tags) {
+      // 2. Tag upsert (domain_id + name unique)
+      const tag = await prisma.tag.upsert({
+        where: { domain_id_name: { domain_id: domain.id, name: tagData.name } },
+        update: {},
+        create: {
+          name: tagData.name,
+          domain_id: domain.id,
+          created_by: 'seed',
+        },
+      });
+      console.log(`[seed]   Tag: ${tag.name} (${tag.id})`);
 
-  console.log('Seeding complete.');
+      // 3. Questions (skip duplicates by content)
+      for (const q of tagData.questions) {
+        const existing = await prisma.question.findFirst({
+          where: { content: q.content },
+        });
+        if (!existing) {
+          await prisma.question.create({
+            data: {
+              tag_id: tag.id,
+              type: q.type,
+              difficulty: q.difficulty,
+              content: q.content,
+              options: q.options,
+              answer: q.answer,
+              explanation: q.explanation,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  console.log('[seed] Done.');
 }
 
 main()
   .catch((e) => {
-    console.error('Seed error:', e);
+    console.error(e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
@@ -8,9 +8,10 @@ export class SessionsService {
   /**
    * 체크포인트 기반으로 세션을 구성한다.
    *
-   * 1. Checkpoint의 tag + difficulty로 문제 은행에서 후보 조회
+   * 1. Checkpoint의 tag_id + difficulty로 문제 은행에서 후보 조회
    * 2. UserQuestionStats에서 p(recall) < 0.5인 복습 문제 추출
    * 3. 복습 ~40% + 새 문제 ~60% 비율로 ~15문제 구성
+   * 4. Session 레코드를 DB에 생성
    *
    * difficulty는 ±1 범위까지 허용하여 문제 풀을 넓힌다.
    */
@@ -22,14 +23,14 @@ export class SessionsService {
       throw new NotFoundException('Checkpoint not found');
     }
 
-    const { tag, difficulty } = checkpoint;
+    const { tag_id, difficulty } = checkpoint;
     const TARGET_COUNT = 15;
     const REVIEW_RATIO = 0.4;
 
     // 복습 대상 조회: p(recall) < 0.5인 문제
     const reviewQuestions = await this.getReviewQuestions(
       userId,
-      tag,
+      tag_id,
       difficulty,
     );
 
@@ -48,7 +49,7 @@ export class SessionsService {
     // 새 문제 조회 (복습 대상 제외, difficulty ±1 범위)
     const newQuestions = await this.prisma.question.findMany({
       where: {
-        tag,
+        tag_id,
         difficulty: {
           gte: Math.max(1, difficulty - 1),
           lte: Math.min(5, difficulty + 1),
@@ -58,7 +59,8 @@ export class SessionsService {
       take: newCount,
       select: {
         id: true,
-        tag: true,
+        tag_id: true,
+        tag: { select: { id: true, name: true } },
         type: true,
         difficulty: true,
         content: true,
@@ -74,7 +76,8 @@ export class SessionsService {
             where: { id: { in: reviewIds } },
             select: {
               id: true,
-              tag: true,
+              tag_id: true,
+              tag: { select: { id: true, name: true } },
               type: true,
               difficulty: true,
               content: true,
@@ -87,7 +90,92 @@ export class SessionsService {
     const allQuestions = [...reviewQuestionsData, ...newQuestions];
     this.shuffle(allQuestions);
 
-    return { questions: allQuestions };
+    // Session 레코드 생성
+    const session = await this.prisma.session.create({
+      data: {
+        user_id: userId,
+        checkpoint_id: checkpointId,
+        total: allQuestions.length,
+      },
+    });
+
+    return { session_id: session.id, questions: allQuestions };
+  }
+
+  /**
+   * 세션을 완료하고 체크포인트를 평가한다.
+   *
+   * 1. 세션에 연결된 UserAnswer를 조회하여 채점
+   * 2. Session 레코드 갱신 (score, correct, total, status, completed_at)
+   * 3. Checkpoint 갱신 (attempts, best_score, status)
+   */
+  async completeSession(userId: string, sessionId: string) {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+    if (session.user_id !== userId) {
+      throw new NotFoundException('Session not found');
+    }
+    if (session.status === 'completed') {
+      throw new ConflictException('이미 완료된 세션입니다');
+    }
+
+    // 세션에 연결된 답안 조회
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { session_id: sessionId },
+    });
+
+    if (answers.length === 0) {
+      throw new BadRequestException('답안이 없는 세션은 완료할 수 없습니다');
+    }
+
+    const total = answers.length;
+    const correct = answers.filter((a) => a.is_correct).length;
+    const score = total > 0 ? correct / total : 0;
+    const passed = score >= 0.7;
+
+    // Session 갱신
+    await this.prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        score,
+        correct,
+        total,
+        status: 'completed',
+        completed_at: new Date(),
+      },
+    });
+
+    // Checkpoint 갱신
+    const checkpoint = await this.prisma.checkpoint.findUnique({
+      where: { id: session.checkpoint_id },
+    });
+    if (!checkpoint) {
+      throw new NotFoundException('Checkpoint not found');
+    }
+
+    const newBestScore = Math.max(checkpoint.best_score ?? 0, score);
+    const newStatus = (passed || checkpoint.status === 'passed') ? 'passed' : 'in_progress';
+
+    await this.prisma.checkpoint.update({
+      where: { id: session.checkpoint_id },
+      data: {
+        attempts: { increment: 1 },
+        best_score: newBestScore,
+        status: newStatus,
+      },
+    });
+
+    return {
+      score,
+      total,
+      correct,
+      passed,
+      checkpoint_status: newStatus,
+    };
   }
 
   /**
@@ -100,14 +188,14 @@ export class SessionsService {
    */
   private async getReviewQuestions(
     userId: string,
-    tag: string,
+    tagId: string,
     difficulty: number,
   ) {
     const stats = await this.prisma.userQuestionStats.findMany({
       where: {
         user_id: userId,
         question: {
-          tag,
+          tag_id: tagId,
           difficulty: {
             gte: Math.max(1, difficulty - 1),
             lte: Math.min(5, difficulty + 1),

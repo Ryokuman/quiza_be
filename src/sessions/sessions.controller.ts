@@ -1,13 +1,12 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
-import { TypedRoute, TypedBody } from '@nestia/core';
+import { Controller, Req } from '@nestjs/common';
+import { TypedRoute, TypedBody, TypedParam } from '@nestia/core';
 import { SessionsService } from './sessions.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import type { ICreateSession, ISession } from './dto/session.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type {
+  ICreateSession,
+  ISession,
+  ISessionCompleteResult,
+} from './dto/session.dto.js';
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('sessions')
 export class SessionsController {
@@ -27,7 +26,6 @@ export class SessionsController {
    * @tag Sessions
    */
   @TypedRoute.Post()
-  @UseGuards(JwtAuthGuard)
   async create(
     @Req() req: AuthenticatedRequest,
     @TypedBody() body: ICreateSession,
@@ -36,5 +34,22 @@ export class SessionsController {
       req.user.userId,
       body.checkpoint_id,
     ) as any;
+  }
+
+  /**
+   * 세션을 완료하고 체크포인트를 평가한다.
+   *
+   * 세션에 연결된 답안을 기반으로 점수를 계산하고,
+   * 체크포인트의 best_score, attempts, status를 갱신한다.
+   *
+   * @param sessionId 세션 ID
+   * @tag Sessions
+   */
+  @TypedRoute.Post(':sessionId/complete')
+  async complete(
+    @Req() req: AuthenticatedRequest,
+    @TypedParam('sessionId') sessionId: string,
+  ): Promise<ISessionCompleteResult> {
+    return this.sessionsService.completeSession(req.user.userId, sessionId);
   }
 }

@@ -25,19 +25,19 @@ export class StatsService {
   private async getTagStats(userId: string): Promise<ITagStat[]> {
     const answers = await this.prisma.userAnswer.findMany({
       where: { user_id: userId },
-      include: { question: { select: { tag: true } } },
+      include: { question: { include: { tag: { select: { id: true, name: true } } } } },
     });
 
     const tagMap = new Map<string, { total: number; correct: number }>();
 
     for (const answer of answers) {
-      const tag = answer.question.tag;
-      const entry = tagMap.get(tag) ?? { total: 0, correct: 0 };
+      const tagName = answer.question.tag.name;
+      const entry = tagMap.get(tagName) ?? { total: 0, correct: 0 };
       entry.total++;
       if (answer.is_correct) {
         entry.correct++;
       }
-      tagMap.set(tag, entry);
+      tagMap.set(tagName, entry);
     }
 
     return Array.from(tagMap.entries()).map(([tag, { total, correct }]) => ({

@@ -10,6 +10,7 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── 유저 ──
 model User {
   id         String   @id @default(uuid()) @db.Uuid
   world_id   String   @unique
@@ -21,20 +22,44 @@ model User {
   goals          UserGoal[]
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
+  payments       Payment[]
+  sessions       Session[]
 
   @@map("users")
 }
 
+// ── 도메인 (구체적 주제: "토익", "제빵" 등) ──
 model Domain {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       String   @unique
-  created_at DateTime @default(now())
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now())
 
-  goals UserGoal[]
+  goals     UserGoal[]
+  tags      Tag[]
+  embedding DomainEmbedding?
 
   @@map("domains")
 }
 
+// ── 태그 (도메인 종속: "토익" → "listening", "grammar" 등) ──
+model Tag {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  domain_id  String   @db.Uuid
+  created_by String   @default("seed")
+  created_at DateTime @default(now())
+
+  domain      Domain         @relation(fields: [domain_id], references: [id])
+  questions   Question[]
+  checkpoints Checkpoint[]
+  embedding   TagEmbedding?
+
+  @@unique([domain_id, name])
+  @@map("tags")
+}
+
+// ── 유저 목적 ──
 model UserGoal {
   id         String   @id @default(uuid()) @db.Uuid
   user_id    String   @db.Uuid
@@ -44,13 +69,14 @@ model UserGoal {
   is_active  Boolean  @default(true)
   created_at DateTime @default(now())
 
-  user    User     @relation(fields: [user_id], references: [id])
-  domain  Domain   @relation(fields: [domain_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+  domain  Domain  @relation(fields: [domain_id], references: [id])
   roadmap Roadmap?
 
   @@map("user_goals")
 }
 
+// ── 로드맵 ──
 model Roadmap {
   id          String   @id @default(uuid()) @db.Uuid
   goal_id     String   @unique @db.Uuid
@@ -64,26 +90,30 @@ model Roadmap {
   @@map("roadmaps")
 }
 
+// ── 체크포인트 ──
 model Checkpoint {
   id          String   @id @default(uuid()) @db.Uuid
   roadmap_id  String   @db.Uuid
   title       String
   description String?
-  tag         String
+  tag_id      String   @db.Uuid
   difficulty  Int
   order       Int
   status      String   @default("not_started")
   best_score  Float?
   attempts    Int      @default(0)
 
-  roadmap Roadmap @relation(fields: [roadmap_id], references: [id])
+  roadmap  Roadmap   @relation(fields: [roadmap_id], references: [id])
+  tag      Tag       @relation(fields: [tag_id], references: [id])
+  sessions Session[]
 
   @@map("checkpoints")
 }
 
+// ── 문제 은행 ──
 model Question {
   id          String   @id @default(uuid()) @db.Uuid
-  tag         String
+  tag_id      String   @db.Uuid
   type        String
   difficulty  Int
   content     String
@@ -92,26 +122,50 @@ model Question {
   explanation String?
   created_at  DateTime @default(now())
 
+  tag            Tag                @relation(fields: [tag_id], references: [id])
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
 
   @@map("questions")
 }
 
+// ── 유저 답안 ──
 model UserAnswer {
   id          String   @id @default(uuid()) @db.Uuid
   user_id     String   @db.Uuid
   question_id String   @db.Uuid
+  session_id  String?  @db.Uuid
   user_answer String
   is_correct  Boolean
   answered_at DateTime @default(now())
 
   user     User     @relation(fields: [user_id], references: [id])
   question Question @relation(fields: [question_id], references: [id])
+  session  Session? @relation(fields: [session_id], references: [id])
 
   @@map("user_answers")
 }
 
+// ── 학습 세션 ──
+model Session {
+  id            String    @id @default(uuid()) @db.Uuid
+  user_id       String    @db.Uuid
+  checkpoint_id String    @db.Uuid
+  score         Float?
+  total         Int       @default(0)
+  correct       Int       @default(0)
+  status        String    @default("in_progress")
+  created_at    DateTime  @default(now())
+  completed_at  DateTime?
+
+  user       User         @relation(fields: [user_id], references: [id])
+  checkpoint Checkpoint   @relation(fields: [checkpoint_id], references: [id])
+  answers    UserAnswer[]
+
+  @@map("sessions")
+}
+
+// ── HLR 복습 추적 (유저 × 문제) ──
 model UserQuestionStats {
   user_id        String   @db.Uuid
   question_id    String   @db.Uuid
@@ -127,12 +181,48 @@ model UserQuestionStats {
   @@map("user_question_stats")
 }
 
+// ── 결제 상태 ──
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+}
+
+// ── 결제 ──
+model Payment {
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  tx_hash      String?  @unique
+  amount_wld   Decimal
+  product_type String
+  status       PaymentStatus @default(pending)
+  created_at   DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("payments")
+}
+
+// ── 도메인 임베딩 (도메인 유사도 검색) ──
 model DomainEmbedding {
-  id         String                     @id @default(uuid()) @db.Uuid
-  domain     String
-  goal       String?
+  id         String                      @id @default(uuid()) @db.Uuid
+  domain_id  String                      @unique @db.Uuid
   embedding  Unsupported("vector(768)")
-  created_at DateTime                   @default(now())
+  created_at DateTime                    @default(now())
+
+  domain Domain @relation(fields: [domain_id], references: [id])
 
   @@map("domain_embeddings")
+}
+
+// ── 태그 임베딩 (도메인 내 태그 유사도 검색) ──
+model TagEmbedding {
+  id         String                      @id @default(uuid()) @db.Uuid
+  tag_id     String                      @unique @db.Uuid
+  embedding  Unsupported("vector(768)")
+  created_at DateTime                    @default(now())
+
+  tag Tag @relation(fields: [tag_id], references: [id])
+
+  @@map("tag_embeddings")
 }

@@ -1,13 +1,8 @@
-import { Controller, Req, UseGuards } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { AnswersService } from './answers.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { ISubmitAnswer, IAnswerResult } from './dto/answer.dto.js';
-import type { Request } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user: { userId: string; worldId: string };
-}
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('answers')
 export class AnswersController {
@@ -24,11 +19,10 @@ export class AnswersController {
    * - 정답 → half_life × 2 (복습 간격 증가)
    * - 오답 → half_life × 0.5 (복습 간격 감소)
    *
-   * @param body question_id + user_answer
+   * @param body question_id + user_answer + optional session_id
    * @tag Answers
    */
   @TypedRoute.Post()
-  @UseGuards(JwtAuthGuard)
   async submit(
     @Req() req: AuthenticatedRequest,
     @TypedBody() body: ISubmitAnswer,
@@ -37,6 +31,7 @@ export class AnswersController {
       req.user.userId,
       body.question_id,
       body.user_answer,
+      body.session_id,
     );
   }
 }

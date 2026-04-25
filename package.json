@@ -20,6 +20,7 @@
     "test:e2e": "npx newman run e2e/postman-collection.json"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@nestia/core": "^11.0.2",
     "@nestia/sdk": "^11.0.2",
     "@nestjs/common": "^11.0.1",
@@ -61,6 +62,7 @@
     "ts-patch": "^3.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "dotenv": "^17.4.2"
   }
 }
