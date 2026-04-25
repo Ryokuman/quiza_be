@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class GeminiService {
+  private readonly logger = new Logger(GeminiService.name);
   private readonly client: GoogleGenerativeAI;
 
   constructor(private readonly configService: ConfigService) {
@@ -39,7 +40,7 @@ export class GeminiService {
       const tags = JSON.parse(cleaned);
       if (Array.isArray(tags)) return tags;
     } catch {
-      // fallback
+      this.logger.warn(`Failed to parse extractTags response: ${text}`);
     }
     return [];
   }
@@ -70,7 +71,7 @@ export class GeminiService {
       const tags = JSON.parse(cleaned);
       if (Array.isArray(tags)) return tags;
     } catch {
-      // fallback
+      this.logger.warn(`Failed to parse suggestDomainTags response: ${text}`);
     }
     return [];
   }
