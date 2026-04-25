@@ -158,7 +158,7 @@ export class SessionsService {
     }
 
     const newBestScore = Math.max(checkpoint.best_score ?? 0, score);
-    const newStatus = passed ? 'passed' : 'in_progress';
+    const newStatus = (passed || checkpoint.status === 'passed') ? 'passed' : 'in_progress';
 
     await this.prisma.checkpoint.update({
       where: { id: session.checkpoint_id },

@@ -1,13 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { RoadmapService } from '../roadmap/roadmap.service.js';
 import { DomainService } from '../domain/domain.service.js';
 
 @Injectable()
 export class GoalService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly roadmapService: RoadmapService,
     private readonly domainService: DomainService,
   ) {}
 
