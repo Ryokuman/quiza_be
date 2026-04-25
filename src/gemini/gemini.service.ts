@@ -181,7 +181,7 @@ JSON으로만 응답:
       if (typeof raw !== 'object' || raw === null) return null;
       const parsed = raw as Record<string, unknown>;
       const score = Math.max(0, Math.min(maxScore, Number(parsed.score)));
-      if (parsed.score !== score) {
+      if (Number(parsed.score) !== score) {
         this.logger.warn(`gradeEssay: score clamped ${parsed.score} → ${score} (max: ${maxScore})`);
       }
       return { score, reason: (parsed.reason as string) ?? '' };

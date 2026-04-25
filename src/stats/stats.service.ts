@@ -25,7 +25,11 @@ export class StatsService {
   private async getTagStats(userId: string): Promise<ITagStat[]> {
     const answers = await this.prisma.userAnswer.findMany({
       where: { user_id: userId },
-      include: {
+      orderBy: { answered_at: 'desc' },
+      take: 1000,
+      select: {
+        is_correct: true,
+        score: true,
         question: {
           select: {
             max_score: true,

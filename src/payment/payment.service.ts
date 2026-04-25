@@ -51,7 +51,7 @@ export class PaymentService {
     userId: string,
     input: { transactionId: string; reference: string },
   ) {
-    // 1. reference로 pending 결제 찾기
+    // 1. reference로 결제 찾기 (소유권 확인)
     const payment = await this.prisma.payment.findUnique({
       where: { id: input.reference },
     });
@@ -83,17 +83,25 @@ export class PaymentService {
       throw new BadRequestException('reference 불일치');
     }
 
-    // 4. 확정 + 프리미엄 활성화
-    const [confirmed] = await this.prisma.$transaction([
-      this.prisma.payment.update({
+    // 4. 확정 + 프리미엄 활성화 (트랜잭션 내에서 status 재확인하여 TOCTOU 방지)
+    const confirmed = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.payment.findUniqueOrThrow({
+        where: { id: payment.id },
+      });
+      if (current.status !== PaymentStatus.pending) {
+        throw new ConflictException('이미 처리된 결제입니다');
+      }
+
+      const updated = await tx.payment.update({
         where: { id: payment.id },
         data: { tx_hash: input.transactionId, status: PaymentStatus.confirmed },
-      }),
-      this.prisma.user.update({
+      });
+      await tx.user.update({
         where: { id: userId },
         data: { is_premium: true },
-      }),
-    ]);
+      });
+      return updated;
+    });
 
     return confirmed;
   }
@@ -102,6 +110,7 @@ export class PaymentService {
     return this.prisma.payment.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
+      take: 50,
     });
   }
 
