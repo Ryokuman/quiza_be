@@ -11,6 +11,7 @@ export class SessionsService {
    * 1. Checkpoint의 tag_id + difficulty로 문제 은행에서 후보 조회
    * 2. UserQuestionStats에서 p(recall) < 0.5인 복습 문제 추출
    * 3. 복습 ~40% + 새 문제 ~60% 비율로 ~15문제 구성
+   * 4. Session 레코드를 DB에 생성
    *
    * difficulty는 ±1 범위까지 허용하여 문제 풀을 넓힌다.
    */
@@ -89,7 +90,82 @@ export class SessionsService {
     const allQuestions = [...reviewQuestionsData, ...newQuestions];
     this.shuffle(allQuestions);
 
-    return { questions: allQuestions };
+    // Session 레코드 생성
+    const session = await this.prisma.session.create({
+      data: {
+        user_id: userId,
+        checkpoint_id: checkpointId,
+        total: allQuestions.length,
+      },
+    });
+
+    return { session_id: session.id, questions: allQuestions };
+  }
+
+  /**
+   * 세션을 완료하고 체크포인트를 평가한다.
+   *
+   * 1. 세션에 연결된 UserAnswer를 조회하여 채점
+   * 2. Session 레코드 갱신 (score, correct, total, status, completed_at)
+   * 3. Checkpoint 갱신 (attempts, best_score, status)
+   */
+  async completeSession(userId: string, sessionId: string) {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+    if (session.user_id !== userId) {
+      throw new NotFoundException('Session not found');
+    }
+
+    // 세션에 연결된 답안 조회
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { session_id: sessionId },
+    });
+
+    const total = answers.length;
+    const correct = answers.filter((a) => a.is_correct).length;
+    const score = total > 0 ? correct / total : 0;
+    const passed = score >= 0.7;
+
+    // Session 갱신
+    await this.prisma.session.update({
+      where: { id: sessionId },
+      data: {
+        score,
+        correct,
+        total,
+        status: 'completed',
+        completed_at: new Date(),
+      },
+    });
+
+    // Checkpoint 갱신
+    const checkpoint = await this.prisma.checkpoint.findUnique({
+      where: { id: session.checkpoint_id },
+    });
+
+    const newBestScore = Math.max(checkpoint!.best_score ?? 0, score);
+    const newStatus = passed ? 'passed' : 'in_progress';
+
+    await this.prisma.checkpoint.update({
+      where: { id: session.checkpoint_id },
+      data: {
+        attempts: { increment: 1 },
+        best_score: newBestScore,
+        status: newStatus,
+      },
+    });
+
+    return {
+      score,
+      total,
+      correct,
+      passed,
+      checkpoint_status: newStatus,
+    };
   }
 
   /**

@@ -23,6 +23,7 @@ model User {
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
   payments       Payment[]
+  sessions       Session[]
 
   @@map("users")
 }
@@ -102,8 +103,9 @@ model Checkpoint {
   best_score  Float?
   attempts    Int      @default(0)
 
-  roadmap Roadmap @relation(fields: [roadmap_id], references: [id])
-  tag     Tag     @relation(fields: [tag_id], references: [id])
+  roadmap  Roadmap   @relation(fields: [roadmap_id], references: [id])
+  tag      Tag       @relation(fields: [tag_id], references: [id])
+  sessions Session[]
 
   @@map("checkpoints")
 }
@@ -132,14 +134,35 @@ model UserAnswer {
   id          String   @id @default(uuid()) @db.Uuid
   user_id     String   @db.Uuid
   question_id String   @db.Uuid
+  session_id  String?  @db.Uuid
   user_answer String
   is_correct  Boolean
   answered_at DateTime @default(now())
 
   user     User     @relation(fields: [user_id], references: [id])
   question Question @relation(fields: [question_id], references: [id])
+  session  Session? @relation(fields: [session_id], references: [id])
 
   @@map("user_answers")
+}
+
+// ── 학습 세션 ──
+model Session {
+  id            String    @id @default(uuid()) @db.Uuid
+  user_id       String    @db.Uuid
+  checkpoint_id String    @db.Uuid
+  score         Float?
+  total         Int       @default(0)
+  correct       Int       @default(0)
+  status        String    @default("in_progress")
+  created_at    DateTime  @default(now())
+  completed_at  DateTime?
+
+  user       User         @relation(fields: [user_id], references: [id])
+  checkpoint Checkpoint   @relation(fields: [checkpoint_id], references: [id])
+  answers    UserAnswer[]
+
+  @@map("sessions")
 }
 
 // ── HLR 복습 추적 (유저 × 문제) ──

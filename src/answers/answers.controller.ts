@@ -19,7 +19,7 @@ export class AnswersController {
    * - 정답 → half_life × 2 (복습 간격 증가)
    * - 오답 → half_life × 0.5 (복습 간격 감소)
    *
-   * @param body question_id + user_answer
+   * @param body question_id + user_answer + optional session_id
    * @tag Answers
    */
   @TypedRoute.Post()
@@ -31,6 +31,7 @@ export class AnswersController {
       req.user.userId,
       body.question_id,
       body.user_answer,
+      body.session_id,
     );
   }
 }

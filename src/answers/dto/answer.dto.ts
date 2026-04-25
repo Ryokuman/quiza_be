@@ -7,6 +7,9 @@ export interface ISubmitAnswer {
 
   /** 유저의 답 (객관식: "A"~"D", 단답형: 자유 입력) */
   user_answer: string & tags.MinLength<1>;
+
+  /** 세션 ID (세션 내 답안 제출 시) */
+  session_id?: (string & tags.Format<'uuid'>) | undefined;
 }
 
 /** 답안 제출 결과 */
