@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { GeminiService } from '../gemini/gemini.service.js';
 
@@ -16,6 +16,8 @@ interface TagSimilarityRow {
 
 @Injectable()
 export class DomainService {
+  private readonly logger = new Logger(DomainService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gemini: GeminiService,
@@ -115,6 +117,18 @@ export class DomainService {
 
     // 2. 임베딩 생성 후 유사 도메인 검색
     const embedding = await this.gemini.generateEmbedding(query);
+
+    if (
+      !Array.isArray(embedding) ||
+      embedding.length === 0 ||
+      !embedding.every((v) => typeof v === 'number' && Number.isFinite(v))
+    ) {
+      this.logger.warn(
+        `Invalid embedding from Gemini: length=${Array.isArray(embedding) ? embedding.length : 'N/A'}`,
+      );
+      return { tags, matches: [] };
+    }
+
     const vectorStr = `[${embedding.join(',')}]`;
 
     const matches = await this.prisma.$queryRaw<SimilarityRow[]>`

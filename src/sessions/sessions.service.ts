@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
@@ -119,11 +119,18 @@ export class SessionsService {
     if (session.user_id !== userId) {
       throw new NotFoundException('Session not found');
     }
+    if (session.status === 'completed') {
+      throw new ConflictException('이미 완료된 세션입니다');
+    }
 
     // 세션에 연결된 답안 조회
     const answers = await this.prisma.userAnswer.findMany({
       where: { session_id: sessionId },
     });
+
+    if (answers.length === 0) {
+      throw new BadRequestException('답안이 없는 세션은 완료할 수 없습니다');
+    }
 
     const total = answers.length;
     const correct = answers.filter((a) => a.is_correct).length;
@@ -146,8 +153,11 @@ export class SessionsService {
     const checkpoint = await this.prisma.checkpoint.findUnique({
       where: { id: session.checkpoint_id },
     });
+    if (!checkpoint) {
+      throw new NotFoundException('Checkpoint not found');
+    }
 
-    const newBestScore = Math.max(checkpoint!.best_score ?? 0, score);
+    const newBestScore = Math.max(checkpoint.best_score ?? 0, score);
     const newStatus = passed ? 'passed' : 'in_progress';
 
     await this.prisma.checkpoint.update({
