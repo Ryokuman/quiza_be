@@ -8,18 +8,22 @@ export interface IGenerateQuestions {
   difficulty: number & tags.Minimum<1> & tags.Maximum<5>;
   /** 생성할 문제 수 (1~10) */
   count: number & tags.Minimum<1> & tags.Maximum<10>;
+  /** 문제 타입 (기본: multi) */
+  type?: 'multi' | 'single' | 'essay';
 }
 
 /** 문제 응답 */
 export interface IQuestion {
   id: string & tags.Format<'uuid'>;
   tag: { id: string; name: string };
-  type: 'multi' | 'single';
+  type: 'multi' | 'single' | 'essay';
   difficulty: number;
   content: string;
   options: string[];
   answer: string;
   explanation: string | null;
+  rubric: string | null;
+  max_score: number;
   created_at: string & tags.Format<'date-time'>;
 }
 

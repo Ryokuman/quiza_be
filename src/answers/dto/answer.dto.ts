@@ -22,4 +22,10 @@ export interface IAnswerResult {
 
   /** 해설. 없으면 null. */
   explanation: string | null;
+
+  /** 부분점수 (서술형). null이면 해당 없음. */
+  score: number | null;
+
+  /** AI 채점 근거 (서술형/단답형 의미 판단). null이면 해당 없음. */
+  grade_reason: string | null;
 }

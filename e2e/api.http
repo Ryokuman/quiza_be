@@ -135,6 +135,97 @@ Cookie: {{token}}
   "count": 5
 }
 
+### ============================================================
+### V4 — 서술형/단답형 채점 + 학습 조언 E2E
+### ============================================================
+
+### ----- V4-1. 서술형 문제 생성 (프리미엄 전용) -----
+### 사전: is_premium=true 유저로 로그인 필요
+
+@tagId = PASTE_TAG_ID_HERE
+
+# @name generateEssay
+POST {{baseUrl}}/questions/generate HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "tagId": "{{tagId}}",
+  "difficulty": 3,
+  "count": 2,
+  "type": "essay"
+}
+
+### ----- V4-2. 서술형 답안 제출 — 부분점수 -----
+### generateEssay 응답의 questions[0].id를 복사하여 essayQuestionId에 넣으세요.
+
+@essayQuestionId = PASTE_ESSAY_QUESTION_ID_HERE
+
+# @name submitEssayPartial
+POST {{baseUrl}}/answers HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "question_id": "{{essayQuestionId}}",
+  "user_answer": "키워드 2개만 포함한 불완전한 답변입니다."
+}
+
+### 예상: score > 0 && score < max_score, grade_reason 존재
+
+### ----- V4-3. 단답형 채점 — 정답 -----
+### 단답형(single) 문제 ID를 넣으세요.
+
+@singleQuestionId = PASTE_SINGLE_QUESTION_ID_HERE
+
+# @name submitSingleCorrect
+POST {{baseUrl}}/answers HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "question_id": "{{singleQuestionId}}",
+  "user_answer": "photosynthesis"
+}
+
+### 예상: is_correct === true, score === 1
+
+### ----- V4-4. 단답형 채점 — 오타 허용 (편집 거리 ≤ 2) -----
+
+# @name submitSingleTypo
+POST {{baseUrl}}/answers HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "question_id": "{{singleQuestionId}}",
+  "user_answer": "photosythesis"
+}
+
+### 예상: is_correct === true, grade_reason에 "오타 허용" 포함
+
+### ----- V4-5. 단답형 채점 — Gemini 의미 판단 (편집 거리 > 2) -----
+
+# @name submitSingleSemantic
+POST {{baseUrl}}/answers HTTP/1.1
+Content-Type: application/json
+Cookie: {{token}}
+
+{
+  "question_id": "{{singleQuestionId}}",
+  "user_answer": "light-based synthesis"
+}
+
+### 예상: Gemini 호출, grade_reason 존재
+
+### ----- V4-6. 학습 조언 -----
+
+# @name getAdvice
+GET {{baseUrl}}/advice HTTP/1.1
+Cookie: {{token}}
+
+### 예상: advice 텍스트, weak_tags 배열
+
 ### ----- 13. Auth: Logout -----
 
 POST {{baseUrl}}/auth/logout HTTP/1.1

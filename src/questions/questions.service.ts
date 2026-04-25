@@ -1,22 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { GeminiService } from '../gemini/gemini.service.js';
 import type { IGenerateQuestions, IQuestion } from './dto/question.dto.js';
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gemini: GeminiService,
+  ) {}
 
-  /**
-   * 플레이스홀더 문제를 생성하고 DB에 저장한다.
-   * TODO: Gemini API 연동으로 교체 예정
-   */
   async generate(input: IGenerateQuestions): Promise<IQuestion[]> {
-    // Tag 이름 조회 (플레이스홀더 콘텐츠 생성용)
     const tag = await this.prisma.tag.findUniqueOrThrow({
       where: { id: input.tagId },
       select: { id: true, name: true },
     });
 
+    const type = input.type ?? 'multi';
+
+    if (type === 'essay') {
+      return this.generateEssay(tag.id, tag.name, input.difficulty, input.count);
+    }
+
+    // multi / single — 기존 플레이스홀더 로직
     const questions = Array.from({ length: input.count }, (_, i) =>
       this.buildPlaceholder(tag.id, tag.name, input.difficulty, i + 1),
     );
@@ -46,6 +52,54 @@ export class QuestionsService {
       options: row.options,
       answer: row.answer,
       explanation: row.explanation,
+      rubric: null,
+      max_score: row.max_score,
+      created_at: row.created_at.toISOString() as IQuestion['created_at'],
+    }));
+  }
+
+  /** Gemini로 서술형 문제를 생성하고 DB에 저장한다. */
+  private async generateEssay(
+    tagId: string,
+    tagName: string,
+    difficulty: number,
+    count: number,
+  ): Promise<IQuestion[]> {
+    const generated = await this.gemini.generateEssayQuestions(tagName, difficulty, count);
+
+    if (generated.length === 0) {
+      return [];
+    }
+
+    const created = await Promise.all(
+      generated.map((q) =>
+        this.prisma.question.create({
+          data: {
+            tag_id: tagId,
+            type: 'essay',
+            difficulty,
+            content: q.content,
+            options: [],
+            answer: q.answer,
+            explanation: q.explanation,
+            rubric: q.rubric,
+            max_score: q.max_score,
+          },
+        }),
+      ),
+    );
+
+    return created.map((row) => ({
+      id: row.id as IQuestion['id'],
+      tag: { id: tagId, name: tagName },
+      type: 'essay' as const,
+      difficulty: row.difficulty,
+      content: row.content,
+      options: [],
+      answer: row.answer,
+      explanation: row.explanation,
+      rubric: row.rubric,
+      max_score: row.max_score,
       created_at: row.created_at.toISOString() as IQuestion['created_at'],
     }));
   }
