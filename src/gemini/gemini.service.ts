@@ -137,7 +137,7 @@ JSON으로만 응답:
       if (typeof raw !== 'object' || raw === null) return null;
       const parsed = raw as Record<string, unknown>;
       return { isCorrect: !!parsed.is_correct, reason: (parsed.reason as string) ?? '' };
-    }, 'judgeSingleAnswer', { isCorrect: false, reason: 'AI 판단 실패 (재시도 후)' });
+    }, 'judgeSingleAnswer');
   }
 
   /**
@@ -191,13 +191,10 @@ JSON으로만 응답:
   }
 
   /**
-   * 학습 조언을 생성한다.
+   * 학습 조언을 생성한다. 실패 시 1회 재시도 후 에러 전파.
    */
   async generateAdvice(statsText: string): Promise<string> {
-    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-    const result = await model.generateContent(
-      `당신은 학습 코치입니다. 아래는 학생의 약점 태그 분석 결과입니다.
+    const prompt = `당신은 학습 코치입니다. 아래는 학생의 약점 태그 분석 결과입니다.
 
 ${statsText}
 
@@ -206,10 +203,9 @@ ${statsText}
 2. 구체적인 학습 전략 (2~3가지)
 3. 격려의 말
 
-한국어로 300자 내외로 조언해주세요. 마크다운 없이 평문으로.`,
-    );
+한국어로 300자 내외로 조언해주세요. 마크다운 없이 평문으로. JSON 형식이 아닌 일반 텍스트로 응답하세요.`;
 
-    return result.response.text().trim();
+    return this.callWithRetryText(prompt, 'generateAdvice');
   }
 
   /**
@@ -252,6 +248,29 @@ ${statsText}
     }
 
     if (fallback !== undefined) return fallback;
+    throw new InternalServerErrorException(`AI 처리에 실패했습니다 (${methodName})`);
+  }
+
+  /**
+   * Gemini 호출 (텍스트 응답용) 1회 재시도.
+   */
+  private async callWithRetryText(prompt: string, methodName: string): Promise<string> {
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const MAX_ATTEMPTS = 2;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim();
+        if (text.length > 0) return text;
+
+        this.logger.warn(`${methodName}: empty response (attempt ${attempt}/${MAX_ATTEMPTS})`);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        this.logger.error(`${methodName}: failed (attempt ${attempt}/${MAX_ATTEMPTS}): ${msg}`);
+      }
+    }
+
     throw new InternalServerErrorException(`AI 처리에 실패했습니다 (${methodName})`);
   }
 }

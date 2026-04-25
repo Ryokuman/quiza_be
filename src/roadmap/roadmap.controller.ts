@@ -1,18 +1,34 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Req, NotFoundException } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { RoadmapService } from './roadmap.service.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import type { IMatchTemplateBody, IMatchTemplateResult } from './dto/match-template.dto.js';
+import type { AuthenticatedRequest } from '../auth/types.js';
 
 @Controller('roadmaps')
 export class RoadmapController {
-  constructor(private readonly roadmapService: RoadmapService) {}
+  constructor(
+    private readonly roadmapService: RoadmapService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Goal ID로 로드맵 조회 (체크포인트 포함).
+   * 본인의 goal에 대한 로드맵만 조회 가능.
    * @tag Roadmap
    */
   @TypedRoute.Get(':goalId')
-  async getByGoalId(@TypedParam('goalId') goalId: string) {
+  async getByGoalId(
+    @Req() req: AuthenticatedRequest,
+    @TypedParam('goalId') goalId: string,
+  ) {
+    // 소유권 검증
+    const goal = await this.prisma.userGoal.findFirst({
+      where: { id: goalId, user_id: req.user.userId },
+    });
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
     return this.roadmapService.getByGoalId(goalId);
   }
 

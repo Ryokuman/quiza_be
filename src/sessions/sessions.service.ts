@@ -18,8 +18,12 @@ export class SessionsService {
   async createSession(userId: string, checkpointId: string) {
     const checkpoint = await this.prisma.checkpoint.findUnique({
       where: { id: checkpointId },
+      include: { roadmap: { include: { goal: { select: { user_id: true } } } } },
     });
     if (!checkpoint) {
+      throw new NotFoundException('Checkpoint not found');
+    }
+    if (checkpoint.roadmap.goal.user_id !== userId) {
       throw new NotFoundException('Checkpoint not found');
     }
 
@@ -123,9 +127,10 @@ export class SessionsService {
       throw new ConflictException('이미 완료된 세션입니다');
     }
 
-    // 세션에 연결된 답안 조회
+    // 세션에 연결된 답안 조회 (부분점수 반영을 위해 question.max_score 포함)
     const answers = await this.prisma.userAnswer.findMany({
       where: { session_id: sessionId },
+      include: { question: { select: { max_score: true } } },
     });
 
     if (answers.length === 0) {
@@ -134,7 +139,15 @@ export class SessionsService {
 
     const total = answers.length;
     const correct = answers.filter((a) => a.is_correct).length;
-    const score = total > 0 ? correct / total : 0;
+
+    // 부분점수 반영: 실제 획득 점수 / 최대 가능 점수
+    let totalScore = 0;
+    let maxPossible = 0;
+    for (const a of answers) {
+      totalScore += a.score ?? (a.is_correct ? a.question.max_score : 0);
+      maxPossible += a.question.max_score;
+    }
+    const score = maxPossible > 0 ? totalScore / maxPossible : 0;
     const passed = score >= 0.7;
 
     // Session 갱신

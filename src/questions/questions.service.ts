@@ -71,7 +71,8 @@ export class QuestionsService {
       return [];
     }
 
-    const created = await Promise.all(
+    // 트랜잭션으로 묶어서 부분 생성 방지
+    const created = await this.prisma.$transaction(
       generated.map((q) =>
         this.prisma.question.create({
           data: {
@@ -89,6 +90,7 @@ export class QuestionsService {
       ),
     );
 
+    // 서술형 문제 응답에서 answer(모범답안) 숨김 — 채점 후에만 노출
     return created.map((row) => ({
       id: row.id as IQuestion['id'],
       tag: { id: tagId, name: tagName },
@@ -96,9 +98,9 @@ export class QuestionsService {
       difficulty: row.difficulty,
       content: row.content,
       options: [],
-      answer: row.answer,
-      explanation: row.explanation,
-      rubric: row.rubric,
+      answer: '',
+      explanation: null,
+      rubric: null,
       max_score: row.max_score,
       created_at: row.created_at.toISOString() as IQuestion['created_at'],
     }));
