@@ -9,13 +9,18 @@ export class AnswersService {
    * 답안을 채점하고 저장한다.
    *
    * 1. 문제의 정답과 비교하여 채점
-   * 2. UserAnswer 레코드 생성
+   * 2. UserAnswer 레코드 생성 (session_id가 있으면 연결)
    * 3. UserQuestionStats 갱신 (HLR 반감기 조정)
    *    - 정답: half_life × 2 (기억 강화)
    *    - 오답: half_life × 0.5 (기억 약화)
    *    - 초기 half_life: 86400초 (1일)
    */
-  async submit(userId: string, questionId: string, userAnswer: string) {
+  async submit(
+    userId: string,
+    questionId: string,
+    userAnswer: string,
+    sessionId?: string,
+  ) {
     const question = await this.prisma.question.findUnique({
       where: { id: questionId },
     });
@@ -34,6 +39,7 @@ export class AnswersService {
         question_id: questionId,
         user_answer: userAnswer,
         is_correct: isCorrect,
+        ...(sessionId ? { session_id: sessionId } : {}),
       },
     });
 
