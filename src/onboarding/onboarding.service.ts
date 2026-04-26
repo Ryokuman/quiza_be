@@ -122,8 +122,9 @@ export class OnboardingService {
 
   /**
    * 태그 단계.
-   * - 기존 태그 표시 + 유저 메시지로 새 태그 생성 가능
-   * - "토익 하고 싶어요" 같은 입력 → LLM으로 태그 추출 → 기존 태그에 추가
+   * - 5개씩 페이지네이션 (context.suggestedTags로 offset 관리)
+   * - "이 중에 없어요" → 다음 5개
+   * - 전부 다 보면 → 직접 입력으로 LLM 태그 생성
    */
   private async handleTagStep(
     body: IOnboardingChatBody,
@@ -131,52 +132,68 @@ export class OnboardingService {
     const { context } = body;
     const domainId = context?.selectedDomainId;
     const domainName = context?.selectedDomainName ?? '';
+    const seenTagIds = new Set(
+      (context?.suggestedTags ?? []).map((t) => t.id),
+    );
 
     // 도메인이 DB에 없으면 먼저 생성
     const resolvedDomainId = domainId
       ?? (await this.domainService.findOrCreate(domainName)).id;
 
-    // 기존 태그 조회
-    const existingTags = await this.domainService.getTagsByDomainId(resolvedDomainId);
-
-    // 유저 메시지가 단순 선택이 아닌 텍스트 입력이면 → 새 태그 생성 시도
+    // 유저가 직접 텍스트 입력 (태그 생성 요청)
     const userMsg = body.message.trim();
-    const isTextInput = userMsg.length > 1
+    const isNoneOfThese = userMsg === '이 중에 없어요';
+    const isTextInput = !isNoneOfThese
+      && userMsg.length > 1
       && !userMsg.includes('선택')
       && !userMsg.includes('확정');
 
     if (isTextInput) {
-      // LLM으로 유저 의도에서 태그 추출
+      // LLM으로 유저 의도에서 태그 추출 + 생성
       const suggestedNames = await this.gemini.suggestDomainTags(
         domainName,
         userMsg,
       );
 
-      // 새 태그 생성 (이미 있으면 findOrCreate가 기존 것 반환)
       const newTags = [];
       for (const name of suggestedNames) {
         const tag = await this.domainService.findOrCreateTag(resolvedDomainId, name, 'llm');
         newTags.push(tag);
       }
 
-      // 기존 + 새 태그 합쳐서 반환 (중복 제거)
-      const allTagMap = new Map<string, { id: string; name: string }>();
-      for (const t of existingTags) allTagMap.set(t.id, { id: t.id, name: t.name });
-      for (const t of newTags) allTagMap.set(t.id, { id: t.id, name: t.name });
-
       return {
         type: 'suggest_tags',
-        message: `"${userMsg}" 관련 태그를 추가했어요! 원하는 태그를 선택해주세요.`,
-        tags: [...allTagMap.values()],
+        message: `"${userMsg}" 관련 태그를 만들었어요! 원하는 태그를 선택해주세요.`,
+        tags: newTags.map((t) => ({ id: t.id, name: t.name })),
       };
     }
 
-    // 기존 태그가 있으면 보여주기
-    if (existingTags.length > 0) {
+    // 기존 태그 전체 조회
+    const allTags = await this.domainService.getTagsByDomainId(resolvedDomainId);
+
+    if (allTags.length > 0) {
+      // 아직 안 보여준 태그 필터링
+      const unseen = allTags.filter((t) => !seenTagIds.has(t.id));
+
+      if (unseen.length > 0) {
+        // 다음 5개 반환
+        const batch = unseen.slice(0, 5);
+        const hasMore = unseen.length > 5;
+
+        return {
+          type: 'suggest_tags',
+          message: seenTagIds.size === 0
+            ? `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요!`
+            : '더 찾아봤어요!',
+          tags: batch.map((t) => ({ id: t.id, name: t.name })),
+        };
+      }
+
+      // 모든 태그를 다 보여줬는데 "이 중에 없어요"
       return {
         type: 'suggest_tags',
-        message: `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요! 원하는 태그가 없으면 직접 입력해보세요.`,
-        tags: existingTags.map((t) => ({ id: t.id, name: t.name })),
+        message: '모든 기존 태그를 다 보여드렸어요. 원하는 주제를 직접 입력해주세요!',
+        tags: [],
       };
     }
 
@@ -188,10 +205,12 @@ export class OnboardingService {
       createdTags.push(tag);
     }
 
+    const batch = createdTags.slice(0, 5);
+
     return {
       type: 'suggest_tags',
-      message: `${domainName}에 맞는 학습 주제를 만들었어요. 선택해주세요! 원하는 태그가 없으면 직접 입력해보세요.`,
-      tags: createdTags.map((t) => ({ id: t.id, name: t.name })),
+      message: `${domainName}에 맞는 학습 주제를 만들었어요. 선택해주세요!`,
+      tags: batch.map((t) => ({ id: t.id, name: t.name })),
     };
   }
 }
