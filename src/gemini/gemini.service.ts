@@ -17,7 +17,7 @@ export class GeminiService {
    * 유저 자연어 입력에서 도메인 태그를 추출한다.
    */
   async extractTags(userInput: string): Promise<string[]> {
-    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const result = await model.generateContent(
       `유저가 공부하고 싶은 내용을 자연어로 입력했습니다. 이 입력에서 관련 도메인 태그를 추출해주세요.
@@ -48,7 +48,7 @@ export class GeminiService {
    * 도메인에 적합한 학습 태그를 추천한다.
    */
   async suggestDomainTags(domain: string, target?: string): Promise<string[]> {
-    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
     const context = target ? `도메인: "${domain}", 학습 목표: "${target}"` : `도메인: "${domain}"`;
 
@@ -227,7 +227,7 @@ ${statsText}
     methodName: string,
     fallback?: T,
   ): Promise<T> {
-    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
     const MAX_ATTEMPTS = 2;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -255,7 +255,7 @@ ${statsText}
    * Gemini 호출 (텍스트 응답용) 1회 재시도.
    */
   private async callWithRetryText(prompt: string, methodName: string): Promise<string> {
-    const model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
     const MAX_ATTEMPTS = 2;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
