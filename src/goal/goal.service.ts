@@ -35,7 +35,37 @@ export class GoalService {
       include: { domain: true },
     });
 
-    // Template matching removed — roadmap will be generated from selected tags
+    // 선택된 태그로 로드맵 + 체크포인트 자동 생성
+    let hasRoadmap = false;
+    if (input.tagIds && input.tagIds.length > 0) {
+      const tags = await this.prisma.tag.findMany({
+        where: { id: { in: input.tagIds } },
+        orderBy: { name: 'asc' },
+      });
+
+      if (tags.length > 0) {
+        await this.prisma.roadmap.create({
+          data: {
+            goal_id: goal.id,
+            title: `${domain.name} - ${input.target}`,
+            is_template: false,
+            checkpoints: {
+              create: tags.map((tag, idx) => ({
+                title: tag.name,
+                description: `${tag.name} 학습`,
+                tag_id: tag.id,
+                difficulty: Math.min(idx + 1, 5),
+                order: idx + 1,
+                status: idx === 0 ? 'in_progress' : 'not_started',
+                best_score: null,
+                attempts: 0,
+              })),
+            },
+          },
+        });
+        hasRoadmap = true;
+      }
+    }
 
     return {
       goal: {
@@ -45,7 +75,7 @@ export class GoalService {
         level: goal.level,
         is_active: goal.is_active,
         created_at: goal.created_at.toISOString(),
-        hasRoadmap: false,
+        hasRoadmap,
       },
       templateMatched: false,
     };
