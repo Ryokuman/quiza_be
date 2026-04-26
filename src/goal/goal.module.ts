@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GoalController } from './goal.controller';
 import { GoalService } from './goal.service';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PrismaModule } from '../database/prisma.module';
 import { DomainModule } from '../domain/domain.module';
 
 @Module({

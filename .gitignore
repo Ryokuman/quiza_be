@@ -10,3 +10,5 @@ node_modules/
 
 # prisma generated client
 /generated/prisma/
+/src/prisma/
+!/src/prisma/.gitkeep

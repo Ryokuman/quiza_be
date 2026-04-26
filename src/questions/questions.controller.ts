@@ -1,7 +1,7 @@
 import { Controller, ForbiddenException, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { QuestionsService } from './questions.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 import type { IGenerateQuestions, IGenerateResult } from './dto/question.dto';
 import type { AuthenticatedRequest } from '../auth/types';
 

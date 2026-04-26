@@ -1,7 +1,7 @@
 import { Controller, Req, NotFoundException } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
 import { RoadmapService } from './roadmap.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 import type { IMatchTemplateBody, IMatchTemplateResult } from './dto/match-template.dto';
 import type { IDomainRoadmap } from '../domain/dto/domain-response.dto';
 import type { AuthenticatedRequest } from '../auth/types';
