@@ -212,7 +212,7 @@ ${statsText}
    * 텍스트를 768차원 임베딩 벡터로 변환한다.
    */
   async generateEmbedding(text: string): Promise<number[]> {
-    const model = this.client.getGenerativeModel({ model: 'text-embedding-004' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-embedding-001' });
     const result = await model.embedContent(text);
     return result.embedding.values;
   }
