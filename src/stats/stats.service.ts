@@ -23,8 +23,20 @@ export class StatsService {
 
   /** 태그별 정답률 + 점수율 통계를 계산한다. 부분점수 반영. */
   private async getTagStats(userId: string): Promise<ITagStat[]> {
+    // 활성 goal의 태그 ID만 조회
+    const activeGoals = await this.prisma.userGoal.findMany({
+      where: { user_id: userId, is_active: true },
+      select: { roadmap: { select: { checkpoints: { select: { tag_id: true } } } } },
+    });
+    const activeTagIds = new Set(
+      activeGoals.flatMap((g) => g.roadmap?.checkpoints.map((c) => c.tag_id) ?? []),
+    );
+
     const answers = await this.prisma.userAnswer.findMany({
-      where: { user_id: userId },
+      where: {
+        user_id: userId,
+        question: { tag_id: { in: [...activeTagIds] } },
+      },
       orderBy: { answered_at: 'desc' },
       take: 1000,
       select: {
@@ -62,17 +74,20 @@ export class StatsService {
     }));
   }
 
-  /** 총 답변 수를 조회한다. */
+  /** 활성 goal 관련 총 답변 수를 조회한다. */
   private async getTotalAnswered(userId: string): Promise<number> {
     return this.prisma.userAnswer.count({
-      where: { user_id: userId },
+      where: {
+        user_id: userId,
+        session: { checkpoint: { roadmap: { goal: { is_active: true } } } },
+      },
     });
   }
 
   /** 유저의 모든 로드맵에 대한 종합 진행률을 계산한다. */
   private async getRoadmapProgress(userId: string): Promise<IRoadmapProgress> {
     const roadmaps = await this.prisma.roadmap.findMany({
-      where: { goal: { user_id: userId } },
+      where: { goal: { user_id: userId, is_active: true } },
       select: { id: true },
     });
 

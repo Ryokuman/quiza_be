@@ -12,3 +12,4 @@ node_modules/
 /generated/prisma/
 /src/prisma/
 !/src/prisma/.gitkeep
+.vercel
