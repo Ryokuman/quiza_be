@@ -59,9 +59,11 @@ export class AnswersService {
       }
 
       case 'multi': {
-        isCorrect =
-          question.answer.trim().toLowerCase() ===
-          userAnswer.trim().toLowerCase();
+        // 정답과 유저 답 모두 인덱스(0~3) 기반으로 비교
+        const correctIdx = parseInt(question.answer, 10);
+        const userIdx = parseInt(userAnswer, 10);
+        isCorrect = !isNaN(correctIdx) && !isNaN(userIdx) && correctIdx === userIdx;
+        this.logger.log(`[multi] 유저: ${userIdx} / 정답: ${correctIdx} → ${isCorrect ? '정답' : '오답'}`);
         score = isCorrect ? question.max_score : 0;
         break;
       }

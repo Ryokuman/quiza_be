@@ -225,7 +225,7 @@ ${statsText}
     }[]
   > {
     const typeDesc = type === 'multi'
-      ? '4지선다 객관식 (options에 4개 선택지, answer에 정답 문자열)'
+      ? '4지선다 객관식'
       : '단답형 (options는 빈 배열, answer에 정답 단어/구)';
 
     const prompt = `당신은 교육 전문가입니다. "${tagName}" 주제로 ${typeDesc} 문제를 생성해주세요.
@@ -236,12 +236,14 @@ ${statsText}
 - 한국어로 출제
 - 각 문제마다:
   - content: 문제 본문
-  - options: ${type === 'multi' ? '4개 선택지 배열' : '빈 배열 []'}
-  - answer: 정답
+  - options: ${type === 'multi' ? '4개 선택지 배열 (선택지 텍스트만, A/B/C/D 같은 라벨 붙이지 마세요)' : '빈 배열 []'}
+  - answer: ${type === 'multi' ? '정답의 인덱스 번호 (0부터 시작하는 숫자, 문자열로. 예: "0", "1", "2", "3")' : '정답 단어/구'}
   - explanation: 해설 (왜 이 답이 맞는지)
 
+${type === 'multi' ? '중요: answer는 반드시 "0", "1", "2", "3" 중 하나여야 합니다. 정답 텍스트가 아닌 options 배열의 인덱스입니다.' : ''}
+
 JSON 배열 형식으로만 응답 (다른 텍스트 없이):
-[{"content":"...","options":${type === 'multi' ? '["A","B","C","D"]' : '[]'},"answer":"...","explanation":"..."}]`;
+[{"content":"...","options":${type === 'multi' ? '["선택지1","선택지2","선택지3","선택지4"]' : '[]'},"answer":"${type === 'multi' ? '0' : '...'}","explanation":"..."}]`;
 
     return this.callWithRetry(prompt, (parsed) => {
       if (!Array.isArray(parsed)) return null;

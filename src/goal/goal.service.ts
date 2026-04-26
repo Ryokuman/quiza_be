@@ -1,9 +1,11 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DomainService } from '../domain/domain.service';
 
 @Injectable()
 export class GoalService {
+  private readonly logger = new Logger(GoalService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly domainService: DomainService,
@@ -101,9 +103,11 @@ export class GoalService {
   }
 
   async deactivateGoal(userId: string, goalId: string) {
-    await this.prisma.userGoal.updateMany({
+    this.logger.log(`목표 비활성화: userId=${userId}, goalId=${goalId}`);
+    const result = await this.prisma.userGoal.updateMany({
       where: { id: goalId, user_id: userId },
       data: { is_active: false },
     });
+    this.logger.log(`비활성화 결과: ${result.count}건 업데이트`);
   }
 }
