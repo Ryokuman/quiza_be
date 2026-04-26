@@ -5,8 +5,8 @@ export interface ISubmitAnswer {
   /** 문제 ID */
   question_id: string & tags.Format<'uuid'>;
 
-  /** 유저의 답 (객관식: "A"~"D", 단답형: 자유 입력) */
-  user_answer: string & tags.MinLength<1>;
+  /** 유저의 답 (객관식: "A"~"D", 단답형: 자유 입력, 서술형: 텍스트) */
+  user_answer: string & tags.MinLength<1> & tags.MaxLength<5000>;
 
   /** 세션 ID (세션 내 답안 제출 시) */
   session_id?: (string & tags.Format<'uuid'>) | undefined;
@@ -22,4 +22,10 @@ export interface IAnswerResult {
 
   /** 해설. 없으면 null. */
   explanation: string | null;
+
+  /** 부분점수 (서술형). null이면 해당 없음. */
+  score: number | null;
+
+  /** AI 채점 근거 (서술형/단답형 의미 판단). null이면 해당 없음. */
+  grade_reason: string | null;
 }

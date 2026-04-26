@@ -21,30 +21,44 @@ export class StatsService {
     };
   }
 
-  /** 태그별 정답률 통계를 계산한다. */
+  /** 태그별 정답률 + 점수율 통계를 계산한다. 부분점수 반영. */
   private async getTagStats(userId: string): Promise<ITagStat[]> {
     const answers = await this.prisma.userAnswer.findMany({
       where: { user_id: userId },
-      include: { question: { include: { tag: { select: { id: true, name: true } } } } },
+      orderBy: { answered_at: 'desc' },
+      take: 1000,
+      select: {
+        is_correct: true,
+        score: true,
+        question: {
+          select: {
+            max_score: true,
+            tag: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
 
-    const tagMap = new Map<string, { total: number; correct: number }>();
+    const tagMap = new Map<string, { total: number; correct: number; totalScore: number; maxPossible: number }>();
 
     for (const answer of answers) {
       const tagName = answer.question.tag.name;
-      const entry = tagMap.get(tagName) ?? { total: 0, correct: 0 };
+      const entry = tagMap.get(tagName) ?? { total: 0, correct: 0, totalScore: 0, maxPossible: 0 };
       entry.total++;
       if (answer.is_correct) {
         entry.correct++;
       }
+      entry.totalScore += answer.score ?? (answer.is_correct ? answer.question.max_score : 0);
+      entry.maxPossible += answer.question.max_score;
       tagMap.set(tagName, entry);
     }
 
-    return Array.from(tagMap.entries()).map(([tag, { total, correct }]) => ({
+    return Array.from(tagMap.entries()).map(([tag, { total, correct, totalScore, maxPossible }]) => ({
       tag,
       total,
       correct,
       accuracy: total === 0 ? 0 : Math.round((correct / total) * 100),
+      score_rate: maxPossible === 0 ? 0 : Math.round((totalScore / maxPossible) * 100),
     }));
   }
 

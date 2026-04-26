@@ -1,6 +1,4 @@
 export interface IMatchTemplateBody {
-  domain: string;
-  goal: string;
   embedding: number[];
 }
 

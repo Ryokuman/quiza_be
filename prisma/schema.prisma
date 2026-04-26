@@ -120,6 +120,8 @@ model Question {
   options     String[]
   answer      String
   explanation String?
+  rubric      String?
+  max_score   Int      @default(1)
   created_at  DateTime @default(now())
 
   tag            Tag                @relation(fields: [tag_id], references: [id])
@@ -131,13 +133,15 @@ model Question {
 
 // ── 유저 답안 ──
 model UserAnswer {
-  id          String   @id @default(uuid()) @db.Uuid
-  user_id     String   @db.Uuid
-  question_id String   @db.Uuid
-  session_id  String?  @db.Uuid
-  user_answer String
-  is_correct  Boolean
-  answered_at DateTime @default(now())
+  id           String   @id @default(uuid()) @db.Uuid
+  user_id      String   @db.Uuid
+  question_id  String   @db.Uuid
+  session_id   String?  @db.Uuid
+  user_answer  String
+  is_correct   Boolean
+  score        Float?
+  grade_reason String?
+  answered_at  DateTime @default(now())
 
   user     User     @relation(fields: [user_id], references: [id])
   question Question @relation(fields: [question_id], references: [id])

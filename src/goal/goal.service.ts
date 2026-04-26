@@ -56,6 +56,7 @@ export class GoalService {
       where: { user_id: userId, is_active: true },
       include: { domain: true, roadmap: true },
       orderBy: { created_at: 'desc' },
+      take: 50,
     });
 
     return goals.map((g) => ({

@@ -15,6 +15,7 @@ import { AnswersModule } from './answers/answers.module.js';
 import { QuestionsModule } from './questions/questions.module.js';
 import { StatsModule } from './stats/stats.module.js';
 import { OnboardingModule } from './onboarding/onboarding.module.js';
+import { AdviceModule } from './advice/advice.module.js';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { OnboardingModule } from './onboarding/onboarding.module.js';
     QuestionsModule,
     StatsModule,
     OnboardingModule,
+    AdviceModule,
   ],
   controllers: [AppController],
   providers: [

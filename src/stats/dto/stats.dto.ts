@@ -11,6 +11,9 @@ export interface ITagStat {
 
   /** 정답률 (0~100) */
   accuracy: number;
+
+  /** 점수율 (0~100, 부분점수 반영) */
+  score_rate: number;
 }
 
 /** 로드맵 진행률 */

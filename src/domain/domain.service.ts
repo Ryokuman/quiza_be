@@ -26,6 +26,7 @@ export class DomainService {
   async getAllDomains() {
     return this.prisma.domain.findMany({
       orderBy: { name: 'asc' },
+      take: 100,
     });
   }
 
@@ -194,6 +195,7 @@ export class DomainService {
     return this.prisma.tag.findMany({
       where: { domain_id: domainId },
       orderBy: { name: 'asc' },
+      take: 100,
     });
   }
 
