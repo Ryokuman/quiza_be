@@ -137,7 +137,7 @@ export class DomainService {
              1 - (de.embedding <=> ${vectorStr}::vector) as similarity
       FROM domain_embeddings de
       JOIN domains d ON d.id = de.domain_id
-      WHERE 1 - (de.embedding <=> ${vectorStr}::vector) > 0.7
+      WHERE 1 - (de.embedding <=> ${vectorStr}::vector) > 0.65
       ORDER BY similarity DESC
       LIMIT 20
     `;
@@ -176,7 +176,7 @@ export class DomainService {
       FROM tag_embeddings te
       JOIN tags t ON t.id = te.tag_id
       WHERE t.domain_id = ${domainId}::uuid
-        AND 1 - (te.embedding <=> ${vectorStr}::vector) > 0.7
+        AND 1 - (te.embedding <=> ${vectorStr}::vector) > 0.65
       ORDER BY similarity DESC
       LIMIT 10
     `;
