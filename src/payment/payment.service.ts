@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaymentStatus } from '../../generated/prisma/client';
+import { PaymentStatus } from '../prisma/client';
 
 @Injectable()
 export class PaymentService {

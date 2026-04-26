@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes, randomUUID } from 'crypto';
-import { verifySiweMessage } from '@worldcoin/minikit-js/siwe';
+import { verifySiweMessage } from './siwe.helper';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
