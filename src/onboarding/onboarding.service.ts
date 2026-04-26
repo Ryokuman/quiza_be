@@ -26,13 +26,15 @@ export class OnboardingService {
   ): Promise<IOnboardingChatResult> {
     const { turn, context } = body;
 
+    const hasDomain = context?.selectedDomainId || context?.selectedDomainName;
+
     // 태그까지 선택 완료 → 목표 확정
-    if (context?.selectedDomainId && context?.selectedTagIds?.length) {
+    if (hasDomain && context?.selectedTagIds?.length) {
       return {
         type: 'confirm' as const,
         message: '목표가 설정되었어요! 아래에서 확인하고 학습을 시작해주세요.',
         confirmed: {
-          domainId: context.selectedDomainId,
+          domainId: context.selectedDomainId ?? '',
           domainName: context.selectedDomainName ?? '',
           target: body.message,
           tagIds: context.selectedTagIds,
@@ -41,7 +43,7 @@ export class OnboardingService {
     }
 
     // 도메인이 이미 선택된 상태 → 태그 추천
-    if (context?.selectedDomainId) {
+    if (hasDomain) {
       return this.handleTagSearch(body);
     }
 
@@ -169,30 +171,34 @@ export class OnboardingService {
     body: IOnboardingChatBody,
   ): Promise<IOnboardingChatResult> {
     const { context } = body;
-    const domainId = context!.selectedDomainId!;
-    const domainName = context!.selectedDomainName!;
+    const domainId = context?.selectedDomainId;
+    const domainName = context?.selectedDomainName ?? '';
 
-    // 기존 태그 조회
-    const existingTags = await this.domainService.getTagsByDomainId(domainId);
+    // 기존 도메인이면 태그 조회
+    if (domainId) {
+      const existingTags = await this.domainService.getTagsByDomainId(domainId);
 
-    if (existingTags.length > 0) {
-      // 벡터 검색으로 유저 입력과 관련 높은 태그 우선 정렬
-      const tagResults = await this.domainService.searchTags(
-        domainId,
-        body.message,
-      );
+      if (existingTags.length > 0) {
+        const tagResults = await this.domainService.searchTags(
+          domainId,
+          body.message,
+        );
 
-      const tags =
-        tagResults.length > 0
-          ? tagResults.map((t) => ({ id: t.id, name: t.name, similarity: t.similarity }))
-          : existingTags.map((t) => ({ id: t.id, name: t.name }));
+        const tags =
+          tagResults.length > 0
+            ? tagResults.map((t) => ({ id: t.id, name: t.name, similarity: t.similarity }))
+            : existingTags.map((t) => ({ id: t.id, name: t.name }));
 
-      return {
-        type: 'suggest_tags',
-        message: `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요!`,
-        tags,
-      };
+        return {
+          type: 'suggest_tags',
+          message: `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요!`,
+          tags,
+        };
+      }
     }
+
+    // 도메인이 없으면 (새 도메인) 먼저 생성
+    const resolvedDomainId = domainId ?? (await this.domainService.findOrCreate(domainName)).id;
 
     // 태그가 없으면 LLM으로 생성 추천
     const suggestedNames = await this.gemini.suggestDomainTags(
@@ -203,7 +209,7 @@ export class OnboardingService {
     // 태그 생성 후 반환
     const createdTags = [];
     for (const name of suggestedNames) {
-      const tag = await this.domainService.findOrCreateTag(domainId, name, 'llm');
+      const tag = await this.domainService.findOrCreateTag(resolvedDomainId, name, 'llm');
       createdTags.push(tag);
     }
 
