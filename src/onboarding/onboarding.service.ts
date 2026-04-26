@@ -49,47 +49,42 @@ export class OnboardingService {
   private async handleDomainStep(
     body: IOnboardingChatBody,
   ): Promise<IOnboardingChatResult> {
-    const offset = body.context?.suggestedDomains?.length ?? 0;
+    const seenIds = new Set(
+      (body.context?.suggestedDomains ?? []).map((d) => d.id),
+    );
+
     const { tags, matches } = await this.domainService.searchDomains(
       body.message,
     );
 
-    if (matches.length > offset) {
-      // 아직 안 보여준 매칭 도메인이 있으면 다음 5개
-      const nextBatch = matches.slice(offset, offset + 5);
-      const hasMore = matches.length > offset + 5;
+    // 이미 보여준 도메인 제외
+    const unseen = matches.filter((m) => !seenIds.has(m.id));
 
+    if (unseen.length > 0) {
+      const batch = unseen.slice(0, 5);
       return {
         type: 'suggest_domains',
-        message: offset === 0
+        message: seenIds.size === 0
           ? '추천 도메인이에요! 이 중에 있으신가요?'
           : '더 찾아봤어요! 이 중에 있으신가요?',
-        domains: [
-          ...nextBatch.map((m) => ({
-            id: m.id,
-            name: m.name,
-            similarity: m.similarity,
-            isNew: false,
-          })),
-          // 매칭이 더 있거나, 없으면 직접 생성 옵션
-          ...(hasMore
-            ? []
-            : []),
-        ],
+        domains: batch.map((m) => ({
+          id: m.id,
+          name: m.name,
+          similarity: m.similarity,
+          isNew: false,
+        })),
       };
     }
 
-    // 태그 기반 이름 매칭 시도
+    // 이름 매칭도 시도 (이미 본 것 제외)
     if (tags.length > 0) {
       const domains = await this.domainService.findDomainsByNames(tags);
-      const unseen = domains.filter(
-        (d) => !body.context?.suggestedDomains?.some((s) => s.id === d.id),
-      );
-      if (unseen.length > 0) {
+      const unseenByName = domains.filter((d) => !seenIds.has(d.id));
+      if (unseenByName.length > 0) {
         return {
           type: 'suggest_domains',
           message: '혹시 이런 분야를 찾으시나요?',
-          domains: unseen.map((d) => ({
+          domains: unseenByName.slice(0, 5).map((d) => ({
             id: d.id,
             name: d.name,
             similarity: 0.8,
@@ -99,7 +94,7 @@ export class OnboardingService {
       }
     }
 
-    // LLM fallback — 새 도메인 제안
+    // 모든 DB 도메인 소진 → LLM fallback
     const llmTags = await this.gemini.extractTags(body.message);
     const suggestions: IOnboardingDomainSuggestion[] = llmTags
       .slice(0, 5)
@@ -108,7 +103,7 @@ export class OnboardingService {
     if (suggestions.length === 0) {
       return {
         type: 'suggest_domains',
-        message: '도메인을 파악하기 어려워요. 공부하고 싶은 주제를 구체적으로 알려주세요!',
+        message: '기존 도메인을 모두 보여드렸어요. 원하는 주제를 직접 입력해주세요!',
         domains: [],
       };
     }
