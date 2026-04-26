@@ -14,18 +14,8 @@ export class OnboardingService {
     private readonly gemini: GeminiService,
   ) {}
 
-  /**
-   * 온보딩 대화 처리 (최대 3턴).
-   *
-   * 턴 1: 유저 입력 → 벡터DB 도메인 검색 → 추천
-   * 턴 2: 도메인 선택 → 확인 + 태그 검색 → 태그 추천
-   * 턴 3: 매칭 실패 시 LLM 도메인 추출 → 유저 선택
-   */
-  async chat(
-    body: IOnboardingChatBody,
-  ): Promise<IOnboardingChatResult> {
-    const { turn, context } = body;
-
+  async chat(body: IOnboardingChatBody): Promise<IOnboardingChatResult> {
+    const { context } = body;
     const hasDomain = context?.selectedDomainId || context?.selectedDomainName;
 
     // 태그까지 선택 완료 → 목표 확정
@@ -42,55 +32,64 @@ export class OnboardingService {
       };
     }
 
-    // 도메인이 이미 선택된 상태 → 태그 추천
+    // 도메인 선택됨 → 태그 단계
     if (hasDomain) {
-      return this.handleTagSearch(body);
+      return this.handleTagStep(body);
     }
 
-    // 턴별 분기
-    switch (turn) {
-      case 1:
-        return this.handleTurn1(body);
-      case 2:
-        return this.handleTurn2(body);
-      case 3:
-        return this.handleTurn3(body);
-      default:
-        return this.handleTurn1(body);
-    }
+    // 도메인 미선택 → 도메인 검색/추천
+    return this.handleDomainStep(body);
   }
 
   /**
-   * 턴 1: 임베딩 → 벡터DB 도메인 검색
+   * 도메인 검색 단계.
+   * - 임베딩 유사도 검색 (offset 기반 페이지네이션)
+   * - 매칭 없으면 LLM 도메인 추출 → 새 도메인 제안
    */
-  private async handleTurn1(
+  private async handleDomainStep(
     body: IOnboardingChatBody,
   ): Promise<IOnboardingChatResult> {
+    const offset = body.context?.suggestedDomains?.length ?? 0;
     const { tags, matches } = await this.domainService.searchDomains(
       body.message,
     );
 
-    if (matches.length > 0) {
+    if (matches.length > offset) {
+      // 아직 안 보여준 매칭 도메인이 있으면 다음 5개
+      const nextBatch = matches.slice(offset, offset + 5);
+      const hasMore = matches.length > offset + 5;
+
       return {
         type: 'suggest_domains',
-        message: '추천 도메인이에요! 이 중에 있으신가요?',
-        domains: matches.map((m) => ({
-          id: m.id,
-          name: m.name,
-          similarity: m.similarity,
-          isNew: false,
-        })),
+        message: offset === 0
+          ? '추천 도메인이에요! 이 중에 있으신가요?'
+          : '더 찾아봤어요! 이 중에 있으신가요?',
+        domains: [
+          ...nextBatch.map((m) => ({
+            id: m.id,
+            name: m.name,
+            similarity: m.similarity,
+            isNew: false,
+          })),
+          // 매칭이 더 있거나, 없으면 직접 생성 옵션
+          ...(hasMore
+            ? []
+            : []),
+        ],
       };
     }
 
-    // 벡터DB 매칭 없음 → 태그 기반 검색 시도
+    // 태그 기반 이름 매칭 시도
     if (tags.length > 0) {
       const domains = await this.domainService.findDomainsByNames(tags);
-      if (domains.length > 0) {
+      const unseen = domains.filter(
+        (d) => !body.context?.suggestedDomains?.some((s) => s.id === d.id),
+      );
+      if (unseen.length > 0) {
         return {
           type: 'suggest_domains',
           message: '혹시 이런 분야를 찾으시나요?',
-          domains: domains.map((d) => ({
+          domains: unseen.map((d) => ({
             id: d.id,
             name: d.name,
             similarity: 0.8,
@@ -100,54 +99,11 @@ export class OnboardingService {
       }
     }
 
-    // 아무것도 안 나옴 → 더 자세히 물어보기
-    return {
-      type: 'suggest_domains',
-      message: '정확한 도메인을 찾지 못했어요. 좀 더 자세히 말씀해주세요!',
-      domains: [],
-    };
-  }
-
-  /**
-   * 턴 2: 유저가 추가 입력하거나 도메인 선택을 확인
-   */
-  private async handleTurn2(
-    body: IOnboardingChatBody,
-  ): Promise<IOnboardingChatResult> {
-    // 유저가 도메인 이름을 직접 입력한 경우 → 재검색
-    const { matches } = await this.domainService.searchDomains(body.message);
-
-    if (matches.length > 0) {
-      return {
-        type: 'suggest_domains',
-        message: '이 도메인이 맞으신가요?',
-        domains: matches.map((m) => ({
-          id: m.id,
-          name: m.name,
-          similarity: m.similarity,
-          isNew: false,
-        })),
-      };
-    }
-
-    // 여전히 없으면 → LLM fallback 미리 시도
-    return this.handleTurn3(body);
-  }
-
-  /**
-   * 턴 3 (fallback): LLM으로 도메인 추출 → 최대 5개 제안
-   */
-  private async handleTurn3(
-    body: IOnboardingChatBody,
-  ): Promise<IOnboardingChatResult> {
-    const tags = await this.gemini.extractTags(body.message);
-
-    const suggestions: IOnboardingDomainSuggestion[] = tags
+    // LLM fallback — 새 도메인 제안
+    const llmTags = await this.gemini.extractTags(body.message);
+    const suggestions: IOnboardingDomainSuggestion[] = llmTags
       .slice(0, 5)
-      .map((tag) => ({
-        name: tag,
-        isNew: true,
-      }));
+      .map((tag) => ({ name: tag, isNew: true }));
 
     if (suggestions.length === 0) {
       return {
@@ -165,48 +121,67 @@ export class OnboardingService {
   }
 
   /**
-   * 도메인 선택 완료 → 태그 검색/추천
+   * 태그 단계.
+   * - 기존 태그 표시 + 유저 메시지로 새 태그 생성 가능
+   * - "토익 하고 싶어요" 같은 입력 → LLM으로 태그 추출 → 기존 태그에 추가
    */
-  private async handleTagSearch(
+  private async handleTagStep(
     body: IOnboardingChatBody,
   ): Promise<IOnboardingChatResult> {
     const { context } = body;
     const domainId = context?.selectedDomainId;
     const domainName = context?.selectedDomainName ?? '';
 
-    // 기존 도메인이면 태그 조회
-    if (domainId) {
-      const existingTags = await this.domainService.getTagsByDomainId(domainId);
+    // 도메인이 DB에 없으면 먼저 생성
+    const resolvedDomainId = domainId
+      ?? (await this.domainService.findOrCreate(domainName)).id;
 
-      if (existingTags.length > 0) {
-        const tagResults = await this.domainService.searchTags(
-          domainId,
-          body.message,
-        );
+    // 기존 태그 조회
+    const existingTags = await this.domainService.getTagsByDomainId(resolvedDomainId);
 
-        const tags =
-          tagResults.length > 0
-            ? tagResults.map((t) => ({ id: t.id, name: t.name, similarity: t.similarity }))
-            : existingTags.map((t) => ({ id: t.id, name: t.name }));
+    // 유저 메시지가 단순 선택이 아닌 텍스트 입력이면 → 새 태그 생성 시도
+    const userMsg = body.message.trim();
+    const isTextInput = userMsg.length > 1
+      && !userMsg.includes('선택')
+      && !userMsg.includes('확정');
 
-        return {
-          type: 'suggest_tags',
-          message: `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요!`,
-          tags,
-        };
+    if (isTextInput) {
+      // LLM으로 유저 의도에서 태그 추출
+      const suggestedNames = await this.gemini.suggestDomainTags(
+        domainName,
+        userMsg,
+      );
+
+      // 새 태그 생성 (이미 있으면 findOrCreate가 기존 것 반환)
+      const newTags = [];
+      for (const name of suggestedNames) {
+        const tag = await this.domainService.findOrCreateTag(resolvedDomainId, name, 'llm');
+        newTags.push(tag);
       }
+
+      // 기존 + 새 태그 합쳐서 반환 (중복 제거)
+      const allTagMap = new Map<string, { id: string; name: string }>();
+      for (const t of existingTags) allTagMap.set(t.id, { id: t.id, name: t.name });
+      for (const t of newTags) allTagMap.set(t.id, { id: t.id, name: t.name });
+
+      return {
+        type: 'suggest_tags',
+        message: `"${userMsg}" 관련 태그를 추가했어요! 원하는 태그를 선택해주세요.`,
+        tags: [...allTagMap.values()],
+      };
     }
 
-    // 도메인이 없으면 (새 도메인) 먼저 생성
-    const resolvedDomainId = domainId ?? (await this.domainService.findOrCreate(domainName)).id;
+    // 기존 태그가 있으면 보여주기
+    if (existingTags.length > 0) {
+      return {
+        type: 'suggest_tags',
+        message: `${domainName}의 세부 주제예요. 관심 있는 태그를 선택해주세요! 원하는 태그가 없으면 직접 입력해보세요.`,
+        tags: existingTags.map((t) => ({ id: t.id, name: t.name })),
+      };
+    }
 
-    // 태그가 없으면 LLM으로 생성 추천
-    const suggestedNames = await this.gemini.suggestDomainTags(
-      domainName,
-      body.message,
-    );
-
-    // 태그 생성 후 반환
+    // 태그가 아예 없으면 LLM으로 초기 태그 생성
+    const suggestedNames = await this.gemini.suggestDomainTags(domainName);
     const createdTags = [];
     for (const name of suggestedNames) {
       const tag = await this.domainService.findOrCreateTag(resolvedDomainId, name, 'llm');
@@ -215,7 +190,7 @@ export class OnboardingService {
 
     return {
       type: 'suggest_tags',
-      message: `${domainName}에 맞는 학습 주제를 만들었어요. 선택해주세요!`,
+      message: `${domainName}에 맞는 학습 주제를 만들었어요. 선택해주세요! 원하는 태그가 없으면 직접 입력해보세요.`,
       tags: createdTags.map((t) => ({ id: t.id, name: t.name })),
     };
   }

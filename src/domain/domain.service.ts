@@ -139,7 +139,7 @@ export class DomainService {
       JOIN domains d ON d.id = de.domain_id
       WHERE 1 - (de.embedding <=> ${vectorStr}::vector) > 0.5
       ORDER BY similarity DESC
-      LIMIT 5
+      LIMIT 20
     `;
 
     // 3. 임베딩 매칭이 없으면 태그 이름으로 도메인 검색
