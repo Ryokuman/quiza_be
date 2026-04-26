@@ -1,9 +1,15 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 @Injectable()
 export class SessionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SessionsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gemini: GeminiService,
+  ) {}
 
   /**
    * 체크포인트 기반으로 세션을 구성한다.
@@ -89,6 +95,47 @@ export class SessionsService {
             },
           })
         : [];
+
+    // 문제 부족 시 Gemini로 자동 생성
+    const totalFound = reviewQuestionsData.length + newQuestions.length;
+    if (totalFound < TARGET_COUNT) {
+      const deficit = TARGET_COUNT - totalFound;
+      this.logger.log(`문제 부족 (${totalFound}/${TARGET_COUNT}), ${deficit}개 자동 생성 시도`);
+
+      const tag = await this.prisma.tag.findUnique({ where: { id: tag_id } });
+      if (tag) {
+        const generated = await this.gemini.generateQuestions(
+          tag.name,
+          difficulty,
+          deficit,
+          'multi',
+        );
+
+        for (const q of generated) {
+          const created = await this.prisma.question.create({
+            data: {
+              tag_id,
+              type: 'multi',
+              difficulty,
+              content: q.content,
+              options: q.options ?? [],
+              answer: q.answer,
+              explanation: q.explanation,
+            },
+            select: {
+              id: true,
+              tag_id: true,
+              tag: { select: { id: true, name: true } },
+              type: true,
+              difficulty: true,
+              content: true,
+              options: true,
+            },
+          });
+          newQuestions.push(created);
+        }
+      }
+    }
 
     // 복습 + 새 문제 합치고 셔플
     const allQuestions = [...reviewQuestionsData, ...newQuestions];

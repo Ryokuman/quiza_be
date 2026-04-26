@@ -209,7 +209,48 @@ ${statsText}
   }
 
   /**
-   * 텍스트를 768차원 임베딩 벡터로 변환한다.
+   * 범용 객관식/단답형 문제를 생성한다.
+   */
+  async generateQuestions(
+    tagName: string,
+    difficulty: number,
+    count: number,
+    type: 'multi' | 'single' = 'multi',
+  ): Promise<
+    {
+      content: string;
+      options: string[];
+      answer: string;
+      explanation: string;
+    }[]
+  > {
+    const typeDesc = type === 'multi'
+      ? '4지선다 객관식 (options에 4개 선택지, answer에 정답 문자열)'
+      : '단답형 (options는 빈 배열, answer에 정답 단어/구)';
+
+    const prompt = `당신은 교육 전문가입니다. "${tagName}" 주제로 ${typeDesc} 문제를 생성해주세요.
+
+요구사항:
+- 난이도: ${difficulty}/5 (1=입문, 5=전문가)
+- 문제 수: ${count}개
+- 한국어로 출제
+- 각 문제마다:
+  - content: 문제 본문
+  - options: ${type === 'multi' ? '4개 선택지 배열' : '빈 배열 []'}
+  - answer: 정답
+  - explanation: 해설 (왜 이 답이 맞는지)
+
+JSON 배열 형식으로만 응답 (다른 텍스트 없이):
+[{"content":"...","options":${type === 'multi' ? '["A","B","C","D"]' : '[]'},"answer":"...","explanation":"..."}]`;
+
+    return this.callWithRetry(prompt, (parsed) => {
+      if (!Array.isArray(parsed)) return null;
+      return parsed;
+    }, 'generateQuestions', []);
+  }
+
+  /**
+   * 텍스트를 임베딩 벡터로 변환한다.
    */
   async generateEmbedding(text: string): Promise<number[]> {
     const model = this.client.getGenerativeModel({ model: 'gemini-embedding-001' });
