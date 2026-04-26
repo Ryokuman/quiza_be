@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { GeminiModule } from '../gemini/gemini.module.js';
-import { AdviceController } from './advice.controller.js';
-import { AdviceService } from './advice.service.js';
+import { GeminiModule } from '../gemini/gemini.module';
+import { AdviceController } from './advice.controller';
+import { AdviceService } from './advice.service';
 
 @Module({
   imports: [GeminiModule],

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { GeminiService } from '../gemini/gemini.service.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 interface SimilarityRow {
   id: string;

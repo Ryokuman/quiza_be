@@ -1,14 +1,14 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
-import { PaymentService } from './payment.service.js';
+import { PaymentService } from './payment.service';
 import type {
   IGenerateNonceBody,
   IGenerateNonceResult,
   IConfirmPaymentBody,
   IPaymentItem,
   IPremiumStatus,
-} from './dto/payment.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+} from './dto/payment.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('payments')
 export class PaymentController {

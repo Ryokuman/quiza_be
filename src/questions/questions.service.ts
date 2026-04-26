@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { GeminiService } from '../gemini/gemini.service.js';
-import type { IGenerateQuestions, IQuestion } from './dto/question.dto.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { GeminiService } from '../gemini/gemini.service';
+import type { IGenerateQuestions, IQuestion } from './dto/question.dto';
 
 @Injectable()
 export class QuestionsService {

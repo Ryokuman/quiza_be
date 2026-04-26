@@ -1,7 +1,11 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { PaymentStatus } from '../../generated/prisma/client.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { PaymentStatus } from '../../generated/prisma/client';
 
 @Injectable()
 export class PaymentService {

@@ -1,12 +1,12 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody, TypedParam } from '@nestia/core';
-import { SessionsService } from './sessions.service.js';
+import { SessionsService } from './sessions.service';
 import type {
   ICreateSession,
   ISession,
   ISessionCompleteResult,
-} from './dto/session.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+} from './dto/session.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('sessions')
 export class SessionsController {

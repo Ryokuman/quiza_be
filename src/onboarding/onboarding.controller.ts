@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
-import { OnboardingService } from './onboarding.service.js';
-import type { IOnboardingChatBody, IOnboardingChatResult } from './dto/onboarding.dto.js';
+import { OnboardingService } from './onboarding.service';
+import type { IOnboardingChatBody, IOnboardingChatResult } from './dto/onboarding.dto';
 
 @Controller('onboarding')
 export class OnboardingController {

@@ -4,7 +4,6 @@
   "description": "",
   "author": "",
   "private": true,
-  "type": "module",
   "license": "UNLICENSED",
   "scripts": {
     "build": "prisma generate && nest build",
@@ -17,11 +16,14 @@
     "sdk": "npx nestia sdk",
     "swagger": "npx nestia swagger",
     "seed": "npx tsx prisma/seed.ts",
-    "test:e2e": "npx newman run e2e/postman-collection.json"
+    "test:e2e": "npx newman run e2e/postman-collection.json",
+    "prepare": "ts-patch install"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@nestia/core": "^11.0.2",
+    "@nestia/e2e": "^11.0.2",
+    "@nestia/fetcher": "^11.0.2",
     "@nestia/sdk": "^11.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@nestia/benchmark": "^11.0.2",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@types/cookie-parser": "^1.4.10",
@@ -53,16 +56,17 @@
     "@types/node": "^24.0.0",
     "@types/passport-jwt": "^4.0.1",
     "@types/uuid": "^11.0.0",
+    "dotenv": "^17.4.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
     "nestia": "^11.0.2",
     "prettier": "^3.4.2",
+    "ts-node": "^10.9.2",
     "ts-patch": "^3.3.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "dotenv": "^17.4.2"
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.20.0"
   }
 }

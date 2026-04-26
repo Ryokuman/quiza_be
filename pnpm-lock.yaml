@@ -14,6 +14,12 @@ importers:
       '@nestia/core':
         specifier: ^11.0.2
         version: 11.0.2(@nestia/fetcher@11.0.2)(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typia@12.0.2(@types/node@24.12.2)(typescript@5.9.3))
+      '@nestia/e2e':
+        specifier: ^11.0.2
+        version: 11.0.2
+      '@nestia/fetcher':
+        specifier: ^11.0.2
+        version: 11.0.2
       '@nestia/sdk':
         specifier: ^11.0.2
         version: 11.0.2(@nestia/core@11.0.2(@nestia/fetcher@11.0.2)(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typia@12.0.2(@types/node@24.12.2)(typescript@5.9.3)))(@types/node@24.12.2)(typescript@5.9.3)
@@ -47,9 +53,6 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -84,6 +87,9 @@ importers:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.39.4
+      '@nestia/benchmark':
+        specifier: ^11.0.2
+        version: 11.0.2
       '@nestjs/cli':
         specifier: ^11.0.0
         version: 11.0.21(@types/node@24.12.2)(prettier@3.8.3)
@@ -105,6 +111,9 @@ importers:
       '@types/uuid':
         specifier: ^11.0.0
         version: 11.0.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       eslint:
         specifier: ^9.18.0
         version: 9.39.4(jiti@2.6.1)
@@ -123,6 +132,9 @@ importers:
       prettier:
         specifier: ^3.4.2
         version: 3.8.3
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@24.12.2)(typescript@5.9.3)
       ts-patch:
         specifier: ^3.3.0
         version: 3.3.0
@@ -130,7 +142,7 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
       typescript:
-        specifier: ^5.7.3
+        specifier: ~5.9.3
         version: 5.9.3
       typescript-eslint:
         specifier: ^8.20.0
@@ -602,6 +614,9 @@ packages:
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
 
+  '@nestia/benchmark@11.0.2':
+    resolution: {integrity: sha512-GPpOct0AtHUSYfAei51otcnaTKZkRLw6fEQq1EEXktef16Tj+w5BVo41DA2yNFn5L7qLnFKTbLFw6sGmgs9H7Q==}
+
   '@nestia/core@11.0.2':
     resolution: {integrity: sha512-JCw/v+iJ69wtIwAB0MBLIdu9myizbjgjRe3aeUsz3D9GVb0AH90c0rAmWHNjgPhta9vF91sMBR0P0LjtWFl3Mg==}
     peerDependencies:
@@ -611,6 +626,9 @@ packages:
       reflect-metadata: '>=0.1.12'
       rxjs: '>=6.0.3'
       typia: ^12.0.0
+
+  '@nestia/e2e@11.0.2':
+    resolution: {integrity: sha512-pkixyxTYxj8a1byyqMCJ/Jbd/BSGHoXWy2zjL8rqO9YJAg1kILSrQ8JWzKLSydaaQODi35vWcFJr3wgGz9EFbA==}
 
   '@nestia/fetcher@11.0.2':
     resolution: {integrity: sha512-IdZNkJJt7bs/Kx96yzW78gA8PHHkqvzriYaXx7XnfN04Ky74rFrZLdu0KbW7+yoHlHUh202NZNTGnY4Ja2/iEw==}
@@ -3370,6 +3388,15 @@ snapshots:
 
   '@lukeed/csprng@1.1.0': {}
 
+  '@nestia/benchmark@11.0.2':
+    dependencies:
+      '@nestia/fetcher': 11.0.2
+      tgrid: 1.2.1
+      tstl: 3.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@nestia/core@11.0.2(@nestia/fetcher@11.0.2)(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typia@12.0.2(@types/node@24.12.2)(typescript@5.9.3))':
     dependencies:
       '@nestia/fetcher': 11.0.2
@@ -3391,6 +3418,8 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@nestia/e2e@11.0.2': {}
 
   '@nestia/fetcher@11.0.2':
     dependencies:

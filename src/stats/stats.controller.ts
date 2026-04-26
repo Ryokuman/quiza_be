@@ -1,8 +1,8 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute } from '@nestia/core';
-import { StatsService } from './stats.service.js';
-import type { IStats } from './dto/stats.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { StatsService } from './stats.service';
+import type { IStats } from './dto/stats.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('stats')
 export class StatsController {

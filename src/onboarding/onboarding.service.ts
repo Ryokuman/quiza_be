@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DomainService } from '../domain/domain.service.js';
-import { GeminiService } from '../gemini/gemini.service.js';
+import { DomainService } from '../domain/domain.service';
+import { GeminiService } from '../gemini/gemini.service';
 import type {
   IOnboardingChatBody,
   IOnboardingChatResult,
   IOnboardingDomainSuggestion,
-} from './dto/onboarding.dto.js';
+} from './dto/onboarding.dto';
 
 @Injectable()
 export class OnboardingService {

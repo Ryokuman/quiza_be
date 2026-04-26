@@ -1,8 +1,8 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
-import { AnswersService } from './answers.service.js';
-import type { ISubmitAnswer, IAnswerResult } from './dto/answer.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { AnswersService } from './answers.service';
+import type { ISubmitAnswer, IAnswerResult } from './dto/answer.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('answers')
 export class AnswersController {

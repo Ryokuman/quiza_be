@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import type { IStats, ITagStat, IRoadmapProgress } from './dto/stats.dto.js';
+import { PrismaService } from '../prisma/prisma.service';
+import type { IStats, ITagStat, IRoadmapProgress } from './dto/stats.dto';
 
 @Injectable()
 export class StatsService {

@@ -1,8 +1,8 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
-import { GoalService } from './goal.service.js';
-import type { ICreateGoalBody, ICreateGoalResult, IGoalItem } from './dto/create-goal.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { GoalService } from './goal.service';
+import type { ICreateGoalBody, ICreateGoalResult, IGoalItem } from './dto/create-goal.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('goals')
 export class GoalController {

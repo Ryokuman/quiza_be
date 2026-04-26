@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { DomainService } from '../domain/domain.service.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { DomainService } from '../domain/domain.service';
 
 @Injectable()
 export class GoalService {

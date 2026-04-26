@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { TypedRoute, TypedBody } from '@nestia/core';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service.js';
-import { Public } from './decorators/public.decorator.js';
-import type { IWalletAuth } from './dto/wallet-auth.dto.js';
-import type { IDevLogin } from './dto/dev-login.dto.js';
-import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto.js';
+import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
+import type { IWalletAuth } from './dto/wallet-auth.dto';
+import type { IDevLogin } from './dto/dev-login.dto';
+import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto';
 import type { Response } from 'express';
-import type { AuthenticatedRequest } from './types.js';
+import type { AuthenticatedRequest } from './types';
 
 @Controller('auth')
 export class AuthController {

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { OnboardingController } from './onboarding.controller.js';
-import { OnboardingService } from './onboarding.service.js';
-import { DomainModule } from '../domain/domain.module.js';
-import { GeminiModule } from '../gemini/gemini.module.js';
+import { OnboardingController } from './onboarding.controller';
+import { OnboardingService } from './onboarding.service';
+import { DomainModule } from '../domain/domain.module';
+import { GeminiModule } from '../gemini/gemini.module';
 
 @Module({
   imports: [DomainModule, GeminiModule],

@@ -1,8 +1,8 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute } from '@nestia/core';
-import { AdviceService } from './advice.service.js';
-import type { IAdviceResult } from './dto/advice.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { AdviceService } from './advice.service';
+import type { IAdviceResult } from './dto/advice.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('advice')
 export class AdviceController {

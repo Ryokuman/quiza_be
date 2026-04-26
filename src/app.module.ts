@@ -1,21 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { PrismaModule } from './prisma/prisma.module.js';
-import { AuthModule } from './auth/auth.module.js';
-import { DomainModule } from './domain/domain.module.js';
-import { RoadmapModule } from './roadmap/roadmap.module.js';
-import { GoalModule } from './goal/goal.module.js';
-import { PaymentModule } from './payment/payment.module.js';
-import { SessionsModule } from './sessions/sessions.module.js';
-import { AnswersModule } from './answers/answers.module.js';
-import { QuestionsModule } from './questions/questions.module.js';
-import { StatsModule } from './stats/stats.module.js';
-import { OnboardingModule } from './onboarding/onboarding.module.js';
-import { AdviceModule } from './advice/advice.module.js';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { DomainModule } from './domain/domain.module';
+import { RoadmapModule } from './roadmap/roadmap.module';
+import { GoalModule } from './goal/goal.module';
+import { PaymentModule } from './payment/payment.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { AnswersModule } from './answers/answers.module';
+import { QuestionsModule } from './questions/questions.module';
+import { StatsModule } from './stats/stats.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
+import { AdviceModule } from './advice/advice.module';
 
 @Module({
   imports: [

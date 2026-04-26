@@ -16,4 +16,4 @@ const config: INestiaConfig = {
   },
 };
 
-export default config;
+module.exports = config;

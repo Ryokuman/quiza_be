@@ -1,10 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { v4 as uuidv4 } from 'uuid';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { verifySiweMessage } from '@worldcoin/minikit-js/siwe';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service';
 
 /**
  * Nonce 저장소 (인메모리, TTL 10분).
@@ -74,7 +73,7 @@ export class AuthService {
       update: {},
       create: {
         world_id: walletAddress,
-        nickname: `User-${uuidv4().slice(0, 8)}`,
+        nickname: `User-${randomUUID().slice(0, 8)}`,
       },
     });
 
@@ -89,14 +88,14 @@ export class AuthService {
    * worldId 미제공 시 'dev-{uuid}' 형식으로 자동 생성.
    */
   async devLogin(worldId?: string): Promise<{ access_token: string }> {
-    const resolvedWorldId = worldId ?? `dev-${uuidv4()}`;
+    const resolvedWorldId = worldId ?? `dev-${randomUUID()}`;
 
     const user = await this.prisma.user.upsert({
       where: { world_id: resolvedWorldId },
       update: {},
       create: {
         world_id: resolvedWorldId,
-        nickname: `User-${uuidv4().slice(0, 8)}`,
+        nickname: `User-${randomUUID().slice(0, 8)}`,
       },
     });
 

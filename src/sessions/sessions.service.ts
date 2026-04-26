@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SessionsService {
@@ -103,7 +103,17 @@ export class SessionsService {
       },
     });
 
-    return { session_id: session.id, questions: allQuestions };
+    // Map questions to match ISessionQuestion DTO (tag as string name)
+    const mapped = allQuestions.map((q) => ({
+      id: q.id,
+      tag: typeof q.tag === 'object' && q.tag !== null ? (q.tag as any).name : q.tag,
+      type: q.type,
+      difficulty: q.difficulty,
+      content: q.content,
+      options: q.options,
+    }));
+
+    return { session_id: session.id, questions: mapped };
   }
 
   /**

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { DomainController } from './domain.controller.js';
-import { DomainService } from './domain.service.js';
-import { PrismaModule } from '../prisma/prisma.module.js';
-import { GeminiModule } from '../gemini/gemini.module.js';
+import { DomainController } from './domain.controller';
+import { DomainService } from './domain.service';
+import { PrismaModule } from '../prisma/prisma.module';
+import { GeminiModule } from '../gemini/gemini.module';
 
 @Module({
   imports: [PrismaModule, GeminiModule],

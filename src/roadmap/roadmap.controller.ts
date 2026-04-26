@@ -1,9 +1,10 @@
 import { Controller, Req, NotFoundException } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
-import { RoadmapService } from './roadmap.service.js';
-import { PrismaService } from '../prisma/prisma.service.js';
-import type { IMatchTemplateBody, IMatchTemplateResult } from './dto/match-template.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { RoadmapService } from './roadmap.service';
+import { PrismaService } from '../prisma/prisma.service';
+import type { IMatchTemplateBody, IMatchTemplateResult } from './dto/match-template.dto';
+import type { IDomainRoadmap } from '../domain/dto/domain-response.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('roadmaps')
 export class RoadmapController {
@@ -21,7 +22,7 @@ export class RoadmapController {
   async getByGoalId(
     @Req() req: AuthenticatedRequest,
     @TypedParam('goalId') goalId: string,
-  ) {
+  ): Promise<IDomainRoadmap | null> {
     // 소유권 검증
     const goal = await this.prisma.userGoal.findFirst({
       where: { id: goalId, user_id: req.user.userId },

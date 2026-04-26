@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { GeminiService } from '../gemini/gemini.service.js';
+import { PrismaService } from '../prisma/prisma.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 @Injectable()
 export class AnswersService {

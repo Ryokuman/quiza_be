@@ -1,9 +1,9 @@
 import { Controller, Req } from '@nestjs/common';
 import { TypedRoute, TypedParam, TypedBody } from '@nestia/core';
-import { DomainService } from './domain.service.js';
-import type { IDomainItem, IDomainProgress, IDomainRoadmap } from './dto/domain-response.dto.js';
-import type { IDomainSearchBody, IDomainSearchResult } from './dto/domain-search.dto.js';
-import type { AuthenticatedRequest } from '../auth/types.js';
+import { DomainService } from './domain.service';
+import type { IDomainItem, IDomainProgress, IDomainRoadmap } from './dto/domain-response.dto';
+import type { IDomainSearchBody, IDomainSearchResult } from './dto/domain-search.dto';
+import type { AuthenticatedRequest } from '../auth/types';
 
 @Controller('domains')
 export class DomainController {
