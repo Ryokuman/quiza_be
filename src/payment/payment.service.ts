@@ -110,6 +110,13 @@ export class PaymentService {
     return confirmed;
   }
 
+  async getPendingPayment(userId: string) {
+    return this.prisma.payment.findFirst({
+      where: { user_id: userId, status: PaymentStatus.pending },
+      orderBy: { created_at: 'desc' },
+    });
+  }
+
   async getPaymentHistory(userId: string) {
     return this.prisma.payment.findMany({
       where: { user_id: userId },

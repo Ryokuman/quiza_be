@@ -53,6 +53,24 @@ export class PaymentController {
   }
 
   /**
+   * 미완료(pending) 결제 조회 — 프론트 재진입 시 자동 confirm용.
+   * @tag Payment
+   */
+  @TypedRoute.Get('pending')
+  async getPending(@Req() req: AuthenticatedRequest): Promise<IPaymentItem | null> {
+    const payment = await this.paymentService.getPendingPayment(req.user.userId);
+    if (!payment) return null;
+    return {
+      id: payment.id,
+      tx_hash: payment.tx_hash,
+      amount_wld: payment.amount_wld.toString(),
+      product_type: payment.product_type,
+      status: payment.status,
+      created_at: payment.created_at.toISOString(),
+    };
+  }
+
+  /**
    * 결제 이력 조회.
    * @tag Payment
    */
