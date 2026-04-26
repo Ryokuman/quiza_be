@@ -26,6 +26,20 @@ export class OnboardingService {
   ): Promise<IOnboardingChatResult> {
     const { turn, context } = body;
 
+    // 태그까지 선택 완료 → 목표 확정
+    if (context?.selectedDomainId && context?.selectedTagIds?.length) {
+      return {
+        type: 'confirm' as const,
+        message: '목표가 설정되었어요! 아래에서 확인하고 학습을 시작해주세요.',
+        confirmed: {
+          domainId: context.selectedDomainId,
+          domainName: context.selectedDomainName ?? '',
+          target: body.message,
+          tagIds: context.selectedTagIds,
+        },
+      };
+    }
+
     // 도메인이 이미 선택된 상태 → 태그 추천
     if (context?.selectedDomainId) {
       return this.handleTagSearch(body);
