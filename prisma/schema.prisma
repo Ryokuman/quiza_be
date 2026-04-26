@@ -211,7 +211,7 @@ model Payment {
 model DomainEmbedding {
   id         String                      @id @default(uuid()) @db.Uuid
   domain_id  String                      @unique @db.Uuid
-  embedding  Unsupported("vector(768)")
+  embedding  Unsupported("vector(3072)")
   created_at DateTime                    @default(now())
 
   domain Domain @relation(fields: [domain_id], references: [id])
@@ -223,7 +223,7 @@ model DomainEmbedding {
 model TagEmbedding {
   id         String                      @id @default(uuid()) @db.Uuid
   tag_id     String                      @unique @db.Uuid
-  embedding  Unsupported("vector(768)")
+  embedding  Unsupported("vector(3072)")
   created_at DateTime                    @default(now())
 
   tag Tag @relation(fields: [tag_id], references: [id])
