@@ -194,6 +194,11 @@ test('dev-login부터 세션 완료까지 핵심 학습 흐름이 외부 서비�
   const goalService = new GoalService(
     prisma as never,
     { findOrCreate: async () => ({ id: 'domain-english', name: '영어' }) } as never,
+    {
+      findSimilarTemplate: async () => null,
+      copyTemplate: async () => ({ id: 'unused-template-copy' }),
+    } as never,
+    { generateEmbedding: async () => [0.1, 0.2, 0.3] } as never,
   );
   const sessionsService = new SessionsService(prisma as never, {
     generateQuestions: async () => [],
