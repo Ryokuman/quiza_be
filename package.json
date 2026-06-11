@@ -17,6 +17,7 @@
     "swagger": "npx nestia swagger",
     "seed": "npx tsx prisma/seed.ts",
     "test:e2e": "npx newman run e2e/postman-collection.json",
+    "test:smoke": "tsx --test \"src/**/*.smoke.ts\"",
     "test:unit": "tsx --test \"src/**/*.spec.ts\"",
     "prepare": "ts-patch install"
   },
