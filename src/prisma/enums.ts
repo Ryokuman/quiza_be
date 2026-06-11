@@ -9,6 +9,17 @@
 * 🟢 You can import this file directly.
 */
 
+export const AuthProvider = {
+  google: 'google',
+  apple: 'apple',
+  kakao: 'kakao',
+  dev: 'dev',
+  legacy_world: 'legacy_world'
+} as const
+
+export type AuthProvider = (typeof AuthProvider)[keyof typeof AuthProvider]
+
+
 export const PaymentStatus = {
   pending: 'pending',
   confirmed: 'confirmed',

@@ -6,7 +6,9 @@ import { Request } from 'express';
 
 interface JwtPayload {
   sub: string;
-  world_id: string;
+  world_id?: string;
+  provider?: string;
+  provider_user_id?: string;
 }
 
 function extractFromCookie(req: Request): string | null {
@@ -27,6 +29,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   validate(payload: JwtPayload) {
-    return { userId: payload.sub, worldId: payload.world_id };
+    return {
+      userId: payload.sub,
+      worldId: payload.world_id,
+      provider: payload.provider,
+      providerUserId: payload.provider_user_id,
+    };
   }
 }

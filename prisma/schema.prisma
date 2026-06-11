@@ -13,12 +13,13 @@ datasource db {
 // ── 유저 ──
 model User {
   id         String   @id @default(uuid()) @db.Uuid
-  world_id   String   @unique
+  world_id   String?  @unique
   nickname   String
   is_premium Boolean  @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  identities     UserIdentity[]
   goals          UserGoal[]
   answers        UserAnswer[]
   question_stats UserQuestionStats[]
@@ -26,6 +27,31 @@ model User {
   sessions       Session[]
 
   @@map("users")
+}
+
+enum AuthProvider {
+  google
+  apple
+  kakao
+  dev
+  legacy_world
+}
+
+model UserIdentity {
+  id               String       @id @default(uuid()) @db.Uuid
+  user_id          String       @db.Uuid
+  provider         AuthProvider
+  provider_user_id String
+  email            String?
+  email_verified   Boolean      @default(false)
+  display_name     String?
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([provider, provider_user_id])
+  @@map("user_identities")
 }
 
 // ── 도메인 (구체적 주제: "토익", "제빵" 등) ──

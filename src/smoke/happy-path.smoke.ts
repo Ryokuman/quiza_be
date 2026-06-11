@@ -12,6 +12,7 @@ Logger.overrideLogger(false);
 
 function createSmokePrisma() {
   const users: Row[] = [];
+  const identities: Row[] = [];
   const domain = { id: 'domain-english', name: '영어' };
   const tag = { id: 'tag-grammar', name: 'grammar', domain_id: domain.id };
   const goals: Row[] = [];
@@ -36,6 +37,29 @@ function createSmokePrisma() {
   return {
     users,
     user: {
+      create: async ({ data }: { data: Row }) => {
+        const user = {
+          id: `user-${users.length + 1}`,
+          world_id: data.world_id ?? null,
+          nickname: data.nickname,
+          is_premium: false,
+          created_at: new Date('2026-06-11T00:00:00.000Z'),
+          updated_at: new Date('2026-06-11T00:00:00.000Z'),
+        };
+        users.push(user);
+
+        if (data.identities?.create) {
+          identities.push({
+            id: `identity-${identities.length + 1}`,
+            user_id: user.id,
+            ...data.identities.create,
+            created_at: new Date('2026-06-11T00:00:00.000Z'),
+            updated_at: new Date('2026-06-11T00:00:00.000Z'),
+          });
+        }
+
+        return user;
+      },
       upsert: async ({ where, create }: { where: Row; create: Row }) => {
         const existing = users.find((user) => user.world_id === where.world_id);
         if (existing) return existing;
@@ -50,6 +74,18 @@ function createSmokePrisma() {
         };
         users.push(user);
         return user;
+      },
+    },
+    userIdentity: {
+      findUnique: async ({ where, include }: { where: Row; include?: Row }) => {
+        const key = where.provider_provider_user_id;
+        const identity = identities.find(
+          (row) => row.provider === key.provider && row.provider_user_id === key.provider_user_id,
+        );
+        if (!identity) return null;
+
+        const user = users.find((row) => row.id === identity.user_id);
+        return include?.user ? { ...identity, user } : identity;
       },
     },
     userGoal: {
@@ -190,7 +226,12 @@ function createSmokePrisma() {
 test('dev-login부터 세션 완료까지 핵심 학습 흐름이 외부 서비스 없이 통과한다', async () => {
   const prisma = createSmokePrisma();
   const jwt = { signAsync: async (payload: Row) => `token:${payload.sub}` };
-  const authService = new AuthService(prisma as never, jwt as never, {} as never);
+  const authService = new AuthService(
+    prisma as never,
+    jwt as never,
+    {} as never,
+    { verify: async () => { throw new Error('unused in smoke test'); } } as never,
+  );
   const goalService = new GoalService(
     prisma as never,
     { findOrCreate: async () => ({ id: 'domain-english', name: '영어' }) } as never,
