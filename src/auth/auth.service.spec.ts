@@ -93,7 +93,7 @@ function buildService(
   };
 
   return {
-    service: new AuthService(prisma as never, jwt as never, {} as never, verifier as never),
+    service: new AuthService(prisma as never, jwt as never, verifier as never),
     users,
     identities,
     signedPayloads,

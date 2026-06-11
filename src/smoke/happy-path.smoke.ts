@@ -229,7 +229,6 @@ test('dev-login부터 세션 완료까지 핵심 학습 흐름이 외부 서비�
   const authService = new AuthService(
     prisma as never,
     jwt as never,
-    {} as never,
     { verify: async () => { throw new Error('unused in smoke test'); } } as never,
   );
   const goalService = new GoalService(
