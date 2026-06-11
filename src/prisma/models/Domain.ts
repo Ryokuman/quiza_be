@@ -309,10 +309,6 @@ export type DomainScalarRelationFilter = {
   isNot?: Prisma.DomainWhereInput
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type DomainCreateNestedOneWithoutTagsInput = {
   create?: Prisma.XOR<Prisma.DomainCreateWithoutTagsInput, Prisma.DomainUncheckedCreateWithoutTagsInput>
   connectOrCreate?: Prisma.DomainCreateOrConnectWithoutTagsInput

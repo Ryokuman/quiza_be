@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
 import type { IWalletAuth } from './dto/wallet-auth.dto';
 import type { IDevLogin } from './dto/dev-login.dto';
+import type { ISocialLogin } from './dto/social-login.dto';
 import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto';
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from './types';
@@ -69,6 +70,25 @@ export class AuthController {
   ): Promise<IAuthResponse> {
     const { nonce, ...payload } = body;
     const result = await this.authService.verifySiweAuth(payload, nonce);
+    this.setTokenCookie(res, result.access_token);
+    return { success: true };
+  }
+
+  /**
+   * Google, Apple, Kakao 로그인 결과를 검증하고 JWT를 발급한다.
+   *
+   * `provider`별 token은 서버에서 검증하며, 유저는 `UserIdentity(provider, provider_user_id)`
+   * 기준으로 조회하거나 생성한다. 서로 다른 provider의 동일 email은 자동 병합하지 않는다.
+   *
+   * @tag Auth
+   */
+  @TypedRoute.Post('social')
+  @Public()
+  async socialLogin(
+    @TypedBody() body: ISocialLogin,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IAuthResponse> {
+    const result = await this.authService.socialLogin(body);
     this.setTokenCookie(res, result.access_token);
     return { success: true };
   }

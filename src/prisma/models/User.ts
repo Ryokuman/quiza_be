@@ -155,7 +155,7 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 
 export type UserGroupByOutputType = {
   id: string
-  world_id: string
+  world_id: string | null
   nickname: string
   is_premium: boolean
   created_at: Date
@@ -185,11 +185,12 @@ export type UserWhereInput = {
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.UuidFilter<"User"> | string
-  world_id?: Prisma.StringFilter<"User"> | string
+  world_id?: Prisma.StringNullableFilter<"User"> | string | null
   nickname?: Prisma.StringFilter<"User"> | string
   is_premium?: Prisma.BoolFilter<"User"> | boolean
   created_at?: Prisma.DateTimeFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"User"> | Date | string
+  identities?: Prisma.UserIdentityListRelationFilter
   goals?: Prisma.UserGoalListRelationFilter
   answers?: Prisma.UserAnswerListRelationFilter
   question_stats?: Prisma.UserQuestionStatsListRelationFilter
@@ -199,11 +200,12 @@ export type UserWhereInput = {
 
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  world_id?: Prisma.SortOrder
+  world_id?: Prisma.SortOrderInput | Prisma.SortOrder
   nickname?: Prisma.SortOrder
   is_premium?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+  identities?: Prisma.UserIdentityOrderByRelationAggregateInput
   goals?: Prisma.UserGoalOrderByRelationAggregateInput
   answers?: Prisma.UserAnswerOrderByRelationAggregateInput
   question_stats?: Prisma.UserQuestionStatsOrderByRelationAggregateInput
@@ -221,6 +223,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   is_premium?: Prisma.BoolFilter<"User"> | boolean
   created_at?: Prisma.DateTimeFilter<"User"> | Date | string
   updated_at?: Prisma.DateTimeFilter<"User"> | Date | string
+  identities?: Prisma.UserIdentityListRelationFilter
   goals?: Prisma.UserGoalListRelationFilter
   answers?: Prisma.UserAnswerListRelationFilter
   question_stats?: Prisma.UserQuestionStatsListRelationFilter
@@ -230,7 +233,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  world_id?: Prisma.SortOrder
+  world_id?: Prisma.SortOrderInput | Prisma.SortOrder
   nickname?: Prisma.SortOrder
   is_premium?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -245,7 +248,7 @@ export type UserScalarWhereWithAggregatesInput = {
   OR?: Prisma.UserScalarWhereWithAggregatesInput[]
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"User"> | string
-  world_id?: Prisma.StringWithAggregatesFilter<"User"> | string
+  world_id?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   nickname?: Prisma.StringWithAggregatesFilter<"User"> | string
   is_premium?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   created_at?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -254,11 +257,12 @@ export type UserScalarWhereWithAggregatesInput = {
 
 export type UserCreateInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
@@ -268,11 +272,12 @@ export type UserCreateInput = {
 
 export type UserUncheckedCreateInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
@@ -282,11 +287,12 @@ export type UserUncheckedCreateInput = {
 
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
@@ -296,11 +302,12 @@ export type UserUpdateInput = {
 
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
@@ -310,7 +317,7 @@ export type UserUncheckedUpdateInput = {
 
 export type UserCreateManyInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
@@ -319,7 +326,7 @@ export type UserCreateManyInput = {
 
 export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -328,7 +335,7 @@ export type UserUpdateManyMutationInput = {
 
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -371,12 +378,30 @@ export type StringFieldUpdateOperationsInput = {
   set?: string
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutIdentitiesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutIdentitiesInput, Prisma.UserUncheckedCreateWithoutIdentitiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutIdentitiesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutIdentitiesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutIdentitiesInput, Prisma.UserUncheckedCreateWithoutIdentitiesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutIdentitiesInput
+  upsert?: Prisma.UserUpsertWithoutIdentitiesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutIdentitiesInput, Prisma.UserUpdateWithoutIdentitiesInput>, Prisma.UserUncheckedUpdateWithoutIdentitiesInput>
 }
 
 export type UserCreateNestedOneWithoutGoalsInput = {
@@ -449,13 +474,86 @@ export type UserUpdateOneRequiredWithoutPaymentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPaymentsInput, Prisma.UserUpdateWithoutPaymentsInput>, Prisma.UserUncheckedUpdateWithoutPaymentsInput>
 }
 
-export type UserCreateWithoutGoalsInput = {
+export type UserCreateWithoutIdentitiesInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
+  answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
+  question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutIdentitiesInput = {
+  id?: string
+  world_id?: string | null
+  nickname: string
+  is_premium?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
+  answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
+  question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutIdentitiesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutIdentitiesInput, Prisma.UserUncheckedCreateWithoutIdentitiesInput>
+}
+
+export type UserUpsertWithoutIdentitiesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutIdentitiesInput, Prisma.UserUncheckedUpdateWithoutIdentitiesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutIdentitiesInput, Prisma.UserUncheckedCreateWithoutIdentitiesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutIdentitiesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutIdentitiesInput, Prisma.UserUncheckedUpdateWithoutIdentitiesInput>
+}
+
+export type UserUpdateWithoutIdentitiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nickname?: Prisma.StringFieldUpdateOperationsInput | string
+  is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
+  answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
+  question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutIdentitiesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nickname?: Prisma.StringFieldUpdateOperationsInput | string
+  is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
+  answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
+  question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutGoalsInput = {
+  id?: string
+  world_id?: string | null
+  nickname: string
+  is_premium?: boolean
+  created_at?: Date | string
+  updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -464,11 +562,12 @@ export type UserCreateWithoutGoalsInput = {
 
 export type UserUncheckedCreateWithoutGoalsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -493,11 +592,12 @@ export type UserUpdateToOneWithWhereWithoutGoalsInput = {
 
 export type UserUpdateWithoutGoalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -506,11 +606,12 @@ export type UserUpdateWithoutGoalsInput = {
 
 export type UserUncheckedUpdateWithoutGoalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -519,11 +620,12 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
 
 export type UserCreateWithoutAnswersInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -532,11 +634,12 @@ export type UserCreateWithoutAnswersInput = {
 
 export type UserUncheckedCreateWithoutAnswersInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -561,11 +664,12 @@ export type UserUpdateToOneWithWhereWithoutAnswersInput = {
 
 export type UserUpdateWithoutAnswersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -574,11 +678,12 @@ export type UserUpdateWithoutAnswersInput = {
 
 export type UserUncheckedUpdateWithoutAnswersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -587,11 +692,12 @@ export type UserUncheckedUpdateWithoutAnswersInput = {
 
 export type UserCreateWithoutSessionsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
@@ -600,11 +706,12 @@ export type UserCreateWithoutSessionsInput = {
 
 export type UserUncheckedCreateWithoutSessionsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
@@ -629,11 +736,12 @@ export type UserUpdateToOneWithWhereWithoutSessionsInput = {
 
 export type UserUpdateWithoutSessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
@@ -642,11 +750,12 @@ export type UserUpdateWithoutSessionsInput = {
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
@@ -655,11 +764,12 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
 
 export type UserCreateWithoutQuestion_statsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentCreateNestedManyWithoutUserInput
@@ -668,11 +778,12 @@ export type UserCreateWithoutQuestion_statsInput = {
 
 export type UserUncheckedCreateWithoutQuestion_statsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
   payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutUserInput
@@ -697,11 +808,12 @@ export type UserUpdateToOneWithWhereWithoutQuestion_statsInput = {
 
 export type UserUpdateWithoutQuestion_statsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUpdateManyWithoutUserNestedInput
@@ -710,11 +822,12 @@ export type UserUpdateWithoutQuestion_statsInput = {
 
 export type UserUncheckedUpdateWithoutQuestion_statsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
   payments?: Prisma.PaymentUncheckedUpdateManyWithoutUserNestedInput
@@ -723,11 +836,12 @@ export type UserUncheckedUpdateWithoutQuestion_statsInput = {
 
 export type UserCreateWithoutPaymentsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsCreateNestedManyWithoutUserInput
@@ -736,11 +850,12 @@ export type UserCreateWithoutPaymentsInput = {
 
 export type UserUncheckedCreateWithoutPaymentsInput = {
   id?: string
-  world_id: string
+  world_id?: string | null
   nickname: string
   is_premium?: boolean
   created_at?: Date | string
   updated_at?: Date | string
+  identities?: Prisma.UserIdentityUncheckedCreateNestedManyWithoutUserInput
   goals?: Prisma.UserGoalUncheckedCreateNestedManyWithoutUserInput
   answers?: Prisma.UserAnswerUncheckedCreateNestedManyWithoutUserInput
   question_stats?: Prisma.UserQuestionStatsUncheckedCreateNestedManyWithoutUserInput
@@ -765,11 +880,12 @@ export type UserUpdateToOneWithWhereWithoutPaymentsInput = {
 
 export type UserUpdateWithoutPaymentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUpdateManyWithoutUserNestedInput
@@ -778,11 +894,12 @@ export type UserUpdateWithoutPaymentsInput = {
 
 export type UserUncheckedUpdateWithoutPaymentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  world_id?: Prisma.StringFieldUpdateOperationsInput | string
+  world_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nickname?: Prisma.StringFieldUpdateOperationsInput | string
   is_premium?: Prisma.BoolFieldUpdateOperationsInput | boolean
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  identities?: Prisma.UserIdentityUncheckedUpdateManyWithoutUserNestedInput
   goals?: Prisma.UserGoalUncheckedUpdateManyWithoutUserNestedInput
   answers?: Prisma.UserAnswerUncheckedUpdateManyWithoutUserNestedInput
   question_stats?: Prisma.UserQuestionStatsUncheckedUpdateManyWithoutUserNestedInput
@@ -795,6 +912,7 @@ export type UserUncheckedUpdateWithoutPaymentsInput = {
  */
 
 export type UserCountOutputType = {
+  identities: number
   goals: number
   answers: number
   question_stats: number
@@ -803,6 +921,7 @@ export type UserCountOutputType = {
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  identities?: boolean | UserCountOutputTypeCountIdentitiesArgs
   goals?: boolean | UserCountOutputTypeCountGoalsArgs
   answers?: boolean | UserCountOutputTypeCountAnswersArgs
   question_stats?: boolean | UserCountOutputTypeCountQuestion_statsArgs
@@ -818,6 +937,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the UserCountOutputType
    */
   select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountIdentitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserIdentityWhereInput
 }
 
 /**
@@ -863,6 +989,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   is_premium?: boolean
   created_at?: boolean
   updated_at?: boolean
+  identities?: boolean | Prisma.User$identitiesArgs<ExtArgs>
   goals?: boolean | Prisma.User$goalsArgs<ExtArgs>
   answers?: boolean | Prisma.User$answersArgs<ExtArgs>
   question_stats?: boolean | Prisma.User$question_statsArgs<ExtArgs>
@@ -900,6 +1027,7 @@ export type UserSelectScalar = {
 
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "world_id" | "nickname" | "is_premium" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  identities?: boolean | Prisma.User$identitiesArgs<ExtArgs>
   goals?: boolean | Prisma.User$goalsArgs<ExtArgs>
   answers?: boolean | Prisma.User$answersArgs<ExtArgs>
   question_stats?: boolean | Prisma.User$question_statsArgs<ExtArgs>
@@ -913,6 +1041,7 @@ export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    identities: Prisma.$UserIdentityPayload<ExtArgs>[]
     goals: Prisma.$UserGoalPayload<ExtArgs>[]
     answers: Prisma.$UserAnswerPayload<ExtArgs>[]
     question_stats: Prisma.$UserQuestionStatsPayload<ExtArgs>[]
@@ -921,7 +1050,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    world_id: string
+    world_id: string | null
     nickname: string
     is_premium: boolean
     created_at: Date
@@ -1320,6 +1449,7 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  identities<T extends Prisma.User$identitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$identitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserIdentityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goals<T extends Prisma.User$goalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$goalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserGoalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   answers<T extends Prisma.User$answersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$answersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserAnswerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   question_stats<T extends Prisma.User$question_statsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$question_statsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserQuestionStatsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1750,6 +1880,30 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Users to delete.
    */
   limit?: number
+}
+
+/**
+ * User.identities
+ */
+export type User$identitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserIdentity
+   */
+  select?: Prisma.UserIdentitySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserIdentity
+   */
+  omit?: Prisma.UserIdentityOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIdentityInclude<ExtArgs> | null
+  where?: Prisma.UserIdentityWhereInput
+  orderBy?: Prisma.UserIdentityOrderByWithRelationInput | Prisma.UserIdentityOrderByWithRelationInput[]
+  cursor?: Prisma.UserIdentityWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserIdentityScalarFieldEnum | Prisma.UserIdentityScalarFieldEnum[]
 }
 
 /**

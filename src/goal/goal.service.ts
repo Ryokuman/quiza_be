@@ -1,6 +1,8 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DomainService } from '../domain/domain.service';
+import { RoadmapService } from '../roadmap/roadmap.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 @Injectable()
 export class GoalService {
@@ -9,6 +11,8 @@ export class GoalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly domainService: DomainService,
+    private readonly roadmapService: RoadmapService,
+    private readonly geminiService: GeminiService,
   ) {}
 
   async createGoal(
@@ -37,15 +41,28 @@ export class GoalService {
       include: { domain: true },
     });
 
-    // 선택된 태그로 로드맵 + 체크포인트 자동 생성
+    let templateMatched = false;
     let hasRoadmap = false;
+
+    const templateMatch = await this.findTemplateMatch(
+      domain.name,
+      input.target,
+      input.level,
+    );
+    if (templateMatch) {
+      await this.roadmapService.copyTemplate(templateMatch.roadmapId, goal.id);
+      templateMatched = true;
+      hasRoadmap = true;
+    }
+
+    // 템플릿이 없으면 선택된 태그로 로드맵 + 체크포인트 자동 생성
     if (input.tagIds && input.tagIds.length > 0) {
       const tags = await this.prisma.tag.findMany({
         where: { id: { in: input.tagIds } },
         orderBy: { name: 'asc' },
       });
 
-      if (tags.length > 0) {
+      if (!hasRoadmap && tags.length > 0) {
         await this.prisma.roadmap.create({
           data: {
             goal_id: goal.id,
@@ -79,8 +96,21 @@ export class GoalService {
         created_at: goal.created_at.toISOString(),
         hasRoadmap,
       },
-      templateMatched: false,
+      templateMatched,
     };
+  }
+
+  private async findTemplateMatch(domain: string, target: string, level: string) {
+    try {
+      const embedding = await this.geminiService.generateEmbedding(
+        `${domain} ${target} ${level}`,
+      );
+      return this.roadmapService.findSimilarTemplate(embedding);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`템플릿 로드맵 매칭 실패, 태그 fallback 사용: ${message}`);
+      return null;
+    }
   }
 
   async getUserGoals(userId: string) {

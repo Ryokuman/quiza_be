@@ -17,6 +17,8 @@
     "swagger": "npx nestia swagger",
     "seed": "npx tsx prisma/seed.ts",
     "test:e2e": "npx newman run e2e/postman-collection.json",
+    "test:smoke": "tsx --test \"src/**/*.smoke.ts\"",
+    "test:unit": "tsx --test \"src/**/*.spec.ts\"",
     "prepare": "ts-patch install"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "@prisma/client": "^7.8.0",
     "@worldcoin/minikit-js": "^2.0.3",
     "cookie-parser": "^1.4.7",
+    "jose": "^6.2.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",

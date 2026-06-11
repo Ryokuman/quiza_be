@@ -22,13 +22,29 @@ export class QuestionsService {
       return this.generateEssay(tag.id, tag.name, input.difficulty, input.count);
     }
 
-    // multi / single — 기존 플레이스홀더 로직
-    const questions = Array.from({ length: input.count }, (_, i) =>
-      this.buildPlaceholder(tag.id, tag.name, input.difficulty, i + 1),
+    const generated = await this.gemini.generateQuestions(
+      tag.name,
+      input.difficulty,
+      input.count,
+      type,
     );
+    const questions = this.normalizeGeneratedQuestions(
+      generated,
+      tag.id,
+      type,
+      input.difficulty,
+    );
+    const questionsToCreate = questions.length > 0
+      ? questions
+      : this.buildFallbackQuestions(
+          tag.id,
+          tag.name,
+          input.difficulty,
+          input.count,
+        );
 
     const created = await Promise.all(
-      questions.map((q) =>
+      questionsToCreate.map((q) =>
         this.prisma.question.create({
           data: {
             tag_id: q.tagId,
@@ -56,6 +72,68 @@ export class QuestionsService {
       max_score: row.max_score,
       created_at: row.created_at.toISOString() as IQuestion['created_at'],
     }));
+  }
+
+  private buildFallbackQuestions(
+    tagId: string,
+    tagName: string,
+    difficulty: number,
+    count: number,
+  ) {
+    return Array.from({ length: count }, (_, i) =>
+      this.buildPlaceholder(tagId, tagName, difficulty, i + 1),
+    );
+  }
+
+  private normalizeGeneratedQuestions(
+    generated: {
+      content: string;
+      options: string[];
+      answer: string;
+      explanation: string;
+    }[],
+    tagId: string,
+    type: 'multi' | 'single',
+    difficulty: number,
+  ) {
+    const normalized = generated
+      .filter((q) => this.isValidGeneratedQuestion(q, type))
+      .map((q) => ({
+        tagId,
+        type,
+        difficulty,
+        content: q.content.trim(),
+        options: type === 'multi' ? q.options : [],
+        answer: q.answer.trim(),
+        explanation: q.explanation?.trim() || null,
+      }));
+
+    return normalized.length === generated.length ? normalized : [];
+  }
+
+  private isValidGeneratedQuestion(
+    question: {
+      content: string;
+      options: string[];
+      answer: string;
+      explanation: string;
+    },
+    type: 'multi' | 'single',
+  ) {
+    if (!question.content?.trim() || !question.answer?.trim()) {
+      return false;
+    }
+
+    if (type === 'multi') {
+      return (
+        Array.isArray(question.options) &&
+        question.options.length === 4 &&
+        question.options.every((option) => option.trim().length > 0) &&
+        ['0', '1', '2', '3'].includes(question.answer)
+      );
+    }
+
+    return Array.isArray(question.options) && question.options.length === 0;
   }
 
   /** Gemini로 서술형 문제를 생성하고 DB에 저장한다. */
@@ -155,7 +233,7 @@ export class QuestionsService {
       difficulty,
       content: `[Grammar Lv.${difficulty} #${index}] Choose the correct word: "${sentences[i]}"`,
       options: optionSets[i],
-      answer: answers[i],
+      answer: String(optionSets[i].indexOf(answers[i])),
       explanation: `The correct answer is "${answers[i]}" based on English grammar rules.`,
     };
   }
@@ -178,7 +256,7 @@ export class QuestionsService {
       difficulty,
       content: `[Vocabulary Lv.${difficulty} #${index}] What does "${w.word}" mean?`,
       options,
-      answer: w.def,
+      answer: String(options.indexOf(w.def)),
       explanation: `"${w.word}" means "${w.def}".`,
     };
   }
@@ -189,7 +267,7 @@ export class QuestionsService {
       difficulty,
       content: `[${tagName} Lv.${difficulty} #${index}] Placeholder question for "${tagName}" topic.`,
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
-      answer: 'Option A',
+      answer: '0',
       explanation: `This is a placeholder question for the "${tagName}" category.`,
     };
   }
