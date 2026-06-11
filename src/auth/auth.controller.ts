@@ -8,10 +8,9 @@ import { TypedRoute, TypedBody } from '@nestia/core';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
-import type { IWalletAuth } from './dto/wallet-auth.dto';
 import type { IDevLogin } from './dto/dev-login.dto';
 import type { ISocialLogin } from './dto/social-login.dto';
-import type { IAuthResponse, INonceResponse } from './dto/auth-response.dto';
+import type { IAuthResponse } from './dto/auth-response.dto';
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from './types';
 
@@ -32,46 +31,6 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
       path: '/',
     });
-  }
-
-  /**
-   * SIWE 인증을 위한 일회용 nonce 발급.
-   *
-   * 프론트엔드가 MiniKit.walletAuth() 호출 전에 이 엔드포인트로 nonce를 받아간다.
-   * nonce는 10분 TTL, 1회용 (사용 후 즉시 폐기).
-   *
-   * @tag Auth
-   */
-  @TypedRoute.Get('nonce')
-  @Public()
-  getNonce(): INonceResponse {
-    return { nonce: this.authService.generateNonce() };
-  }
-
-  /**
-   * MiniKit walletAuth() 결과(SIWE 서명)를 검증하고 JWT를 발급한다.
-   *
-   * 인증 플로우:
-   * 1. 프론트엔드 → GET /auth/nonce → nonce 획득
-   * 2. 프론트엔드 → MiniKit.walletAuth({ nonce }) → SIWE 서명 획득
-   * 3. 프론트엔드 → POST /auth/wallet { message, signature, address, nonce }
-   * 4. 백엔드 → SIWE 검증 → 유저 upsert → JWT 발급 → 쿠키 세팅
-   *
-   * Mini App (World App webview) 전용. 네이티브 앱은 IDKit을 사용한다.
-   *
-   * @param body SIWE 서명 페이로드
-   * @tag Auth
-   */
-  @TypedRoute.Post('wallet')
-  @Public()
-  async walletAuth(
-    @TypedBody() body: IWalletAuth,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<IAuthResponse> {
-    const { nonce, ...payload } = body;
-    const result = await this.authService.verifySiweAuth(payload, nonce);
-    this.setTokenCookie(res, result.access_token);
-    return { success: true };
   }
 
   /**
@@ -97,9 +56,8 @@ export class AuthController {
    * 개발 환경 전용 로그인.
    *
    * 프로덕션에서는 비활성화됨 (ENABLE_DEV_LOGIN=true로 강제 활성화 가능).
-   * World ID 검증 없이 즉시 JWT를 발급한다.
    *
-   * @param body 테스트용 world_id (선택)
+   * @param body 테스트용 개발 식별자 (선택)
    * @tag Auth
    */
   @TypedRoute.Post('dev-login')
@@ -128,7 +86,8 @@ export class AuthController {
    * ```json
    * {
    *   "id": "550e8400-e29b-41d4-a716-446655440000",
-   *   "world_id": "0xabcdef1234567890",
+   *   "world_id": null,
+   *   "identities": [{ "provider": "google", "provider_user_id": "..." }],
    *   "nickname": "User-a1b2c3d4",
    *   "created_at": "2026-04-24T00:00:00.000Z",
    *   "updated_at": "2026-04-24T00:00:00.000Z"

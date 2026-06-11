@@ -1,11 +1,11 @@
 export interface IGenerateNonceBody {
-  amountWld: number;
+  amount: number;
   productType: string;
 }
 
 export interface IGenerateNonceResult {
   reference: string;
-  amountWld: number;
+  amount: number;
   productType: string;
 }
 
@@ -17,7 +17,7 @@ export interface IConfirmPaymentBody {
 export interface IPaymentItem {
   id: string;
   tx_hash: string | null;
-  amount_wld: string;
+  amount: string;
   product_type: string;
   status: string;
   created_at: string;

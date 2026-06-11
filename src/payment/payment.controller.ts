@@ -15,7 +15,9 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   /**
-   * 결제 nonce 생성 — MiniKit.pay() 호출 전에 reference 발급.
+   * 신규 결제 reference 생성.
+   *
+   * QZ-TASK-010에서 App Store/웹 결제 재설계를 마칠 때까지 비활성화한다.
    * @tag Payment
    */
   @TypedRoute.Post('nonce')
@@ -24,13 +26,15 @@ export class PaymentController {
     @Req() req: AuthenticatedRequest,
   ): Promise<IGenerateNonceResult> {
     return this.paymentService.generateNonce(req.user.userId, {
-      amountWld: body.amountWld,
+      amount: body.amount,
       productType: body.productType,
     });
   }
 
   /**
-   * 결제 검증 — MiniKit.pay() 응답 후 Developer Portal API로 검증.
+   * 신규 결제 검증.
+   *
+   * QZ-TASK-010에서 App Store/웹 결제 재설계를 마칠 때까지 비활성화한다.
    * @tag Payment
    */
   @TypedRoute.Post('confirm')
@@ -45,7 +49,7 @@ export class PaymentController {
     return {
       id: payment.id,
       tx_hash: payment.tx_hash,
-      amount_wld: payment.amount_wld.toString(),
+      amount: payment.amount_wld.toString(),
       product_type: payment.product_type,
       status: payment.status,
       created_at: payment.created_at.toISOString(),
@@ -63,7 +67,7 @@ export class PaymentController {
     return {
       id: payment.id,
       tx_hash: payment.tx_hash,
-      amount_wld: payment.amount_wld.toString(),
+      amount: payment.amount_wld.toString(),
       product_type: payment.product_type,
       status: payment.status,
       created_at: payment.created_at.toISOString(),
@@ -80,7 +84,7 @@ export class PaymentController {
     return payments.map((p) => ({
       id: p.id,
       tx_hash: p.tx_hash,
-      amount_wld: p.amount_wld.toString(),
+      amount: p.amount_wld.toString(),
       product_type: p.product_type,
       status: p.status,
       created_at: p.created_at.toISOString(),
