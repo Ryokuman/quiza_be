@@ -5,6 +5,7 @@ import { GeminiService } from '../gemini/gemini.service';
 @Injectable()
 export class SessionsService {
   private readonly logger = new Logger(SessionsService.name);
+  private readonly PASSING_SCORE = 0.8;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -205,7 +206,7 @@ export class SessionsService {
       maxPossible += a.question.max_score;
     }
     const score = maxPossible > 0 ? totalScore / maxPossible : 0;
-    const passed = score >= 0.7;
+    const passed = score >= this.PASSING_SCORE;
 
     // Session 갱신
     await this.prisma.session.update({

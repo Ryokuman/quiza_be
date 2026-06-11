@@ -47,7 +47,7 @@ export interface ISessionCompleteResult {
   /** 정답 수 */
   correct: number;
 
-  /** 합격 여부 (score >= 0.7) */
+  /** 합격 여부 (score >= 0.8) */
   passed: boolean;
 
   /** 체크포인트 상태 */

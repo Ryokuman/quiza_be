@@ -59,11 +59,8 @@ export class AnswersService {
       }
 
       case 'multi': {
-        // 정답과 유저 답 모두 인덱스(0~3) 기반으로 비교
-        const correctIdx = parseInt(question.answer, 10);
-        const userIdx = parseInt(userAnswer, 10);
-        isCorrect = !isNaN(correctIdx) && !isNaN(userIdx) && correctIdx === userIdx;
-        this.logger.log(`[multi] 유저: ${userIdx} / 정답: ${correctIdx} → ${isCorrect ? '정답' : '오답'}`);
+        isCorrect = this.gradeMulti(question.answer, question.options, userAnswer);
+        this.logger.log(`[multi] 유저: ${userAnswer} / 정답: ${question.answer} → ${isCorrect ? '정답' : '오답'}`);
         score = isCorrect ? question.max_score : 0;
         break;
       }
@@ -93,6 +90,29 @@ export class AnswersService {
       score,
       grade_reason: gradeReason,
     };
+  }
+
+  /**
+   * 객관식 채점.
+   * 기존 시드/플레이스홀더는 정답 텍스트를 저장했고, Gemini 생성 문제는
+   * 정답 인덱스를 저장한다. 프론트는 선택지 인덱스를 제출하므로 양쪽 형식을 모두 허용한다.
+   */
+  private gradeMulti(correctAnswer: string, options: string[], userAnswer: string) {
+    const userIdx = Number.parseInt(userAnswer, 10);
+    const correctIdx = Number.parseInt(correctAnswer, 10);
+
+    if (Number.isInteger(userIdx) && Number.isInteger(correctIdx)) {
+      return userIdx === correctIdx;
+    }
+
+    const selectedText = Number.isInteger(userIdx) ? options[userIdx] : userAnswer;
+    if (!selectedText) return false;
+
+    return this.normalizeAnswer(selectedText) === this.normalizeAnswer(correctAnswer);
+  }
+
+  private normalizeAnswer(value: string) {
+    return value.trim().toLowerCase();
   }
 
   /**
