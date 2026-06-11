@@ -144,7 +144,7 @@ test('Gemini 객관식 결과가 부적합하면 기존 placeholder로 fallback�
   });
 
   assert.match(created[0].content, /^\[Grammar Lv\.1 #1\]/);
-  assert.equal(created[0].answer, 'went');
+  assert.equal(created[0].answer, '1');
   assert.equal(result[0].content, created[0].content);
 });
 

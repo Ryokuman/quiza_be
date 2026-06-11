@@ -233,7 +233,7 @@ export class QuestionsService {
       difficulty,
       content: `[Grammar Lv.${difficulty} #${index}] Choose the correct word: "${sentences[i]}"`,
       options: optionSets[i],
-      answer: answers[i],
+      answer: String(optionSets[i].indexOf(answers[i])),
       explanation: `The correct answer is "${answers[i]}" based on English grammar rules.`,
     };
   }
@@ -256,7 +256,7 @@ export class QuestionsService {
       difficulty,
       content: `[Vocabulary Lv.${difficulty} #${index}] What does "${w.word}" mean?`,
       options,
-      answer: w.def,
+      answer: String(options.indexOf(w.def)),
       explanation: `"${w.word}" means "${w.def}".`,
     };
   }
@@ -267,7 +267,7 @@ export class QuestionsService {
       difficulty,
       content: `[${tagName} Lv.${difficulty} #${index}] Placeholder question for "${tagName}" topic.`,
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
-      answer: 'Option A',
+      answer: '0',
       explanation: `This is a placeholder question for the "${tagName}" category.`,
     };
   }
